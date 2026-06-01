@@ -6,6 +6,6 @@ cover:
     alt: "Set Design"
     caption: "Sets I have built"
     hidden: false
-summary: "For all the things that don't fit anywhere else"
+summary: "A catalog of set design and stagecraft projects I have contributed to."
 ---
 A catalog of set design and stagecraft projects I have contributed to.
