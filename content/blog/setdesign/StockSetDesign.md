@@ -47,7 +47,7 @@ Some Canadian resources refer to this stock material as a whaler. When used in o
 We do not have a Mom and Pop lumberyard in my neck of the woods, which means making due with national-chain lumber suppliers. I try to buy 6" or 12" wide stock, as ripping this down
 on the table saw seems to be the best bet for getting high quality, straight, knot free lumber, especially when building platform legs or load bearing structures.
 
-{{< figure src="/images/setdesign/RippingStock.png" title="How to make 1"x3" from 12" stock"" caption="These dimensions are all tied to our uniquely tall flats and should not not be used as a rule" width="50%" >}}
+{{< figure src="/images/setdesign/RippingStock.png" title="How to make 1\"x3\" from 12\" stock" caption="These dimensions are all tied to our uniquely tall flats and should not not be used as a rule" width="50%" >}}
 
 
 Our local 84 Lumber seems to be able to order in a lot of the stock that we request, but has about a 1-2 week lead out time on 5/4"x and 1"x stock.
