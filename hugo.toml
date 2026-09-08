@@ -37,7 +37,7 @@ tableOfContents = true
     # 'buttons' is an array of tables in YAML, so it becomes an array of tables in TOML
   [[params.profileMode.buttons]]
       name = "Projects"
-      url = "/Projects"
+      url = "/projects"
  
     [[params.profileMode.buttons]]
       name = "Blog"
