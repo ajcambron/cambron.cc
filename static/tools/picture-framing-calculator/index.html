@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picture Framing Calculator</title>
+<style>
+  :root{
+    --paper:#f4f1ea; --card:#fffdf8; --ink:#1c1b1a; --muted:#6b665d; --line:#d8d2c4;
+    --red:#8a1f2b; --red-soft:#f3e2e3; --ok:#25623a; --warn:#9a5b00; --bad:#a3141f;
+    --wood:#b98a54; --wood-line:#6e4a22;
+    --head:"Futura","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+    --body:"Avenir Next","Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--body)}
+  header{padding:22px 24px 8px;max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  h1{font:600 28px/1.1 var(--head);margin:0;letter-spacing:.02em}
+  h1 small{display:block;font:500 12px var(--body);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:600 13px var(--body);border:1px solid var(--ink);background:var(--ink);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer}
+  button.ghost{background:transparent;color:var(--ink)}
+  button:hover{opacity:.88}
+  main{max-width:1180px;margin:0 auto;padding:8px 24px 40px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+  @media(min-width:980px){main{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:start}.sticky{position:sticky;top:12px}}
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  h2{font:600 20px var(--head);color:var(--red);margin:0 0 12px;letter-spacing:.03em}
+  h3{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+  .row{display:grid;gap:10px;margin-bottom:10px}
+  .r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}.r4{grid-template-columns:repeat(4,1fr)}
+  label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:600}
+  input[type=text]{width:100%;font:500 15px var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  input[type=text].txt{font-family:var(--body)}
+  input[type=text]:focus,select:focus{outline:2px solid var(--red);outline-offset:0;border-color:var(--red)}
+  input[type=text]:disabled{background:#efece4;color:#9a958a}
+  input.bad{border-color:var(--bad);background:#fdecec}
+  select{font:500 14px var(--body);padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg label{padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-right:1px solid var(--line)}
+  .seg label:last-child{border-right:0}
+  .seg input:checked+label{background:var(--red);color:#fff}
+  .seg input:focus-visible+label{outline:2px solid var(--ink);outline-offset:-2px}
+  .inline{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+  .inline .grow{flex:1;min-width:110px}
+  .hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+  label.tick{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;margin:6px 0;cursor:pointer}
+  label.tick input{width:17px;height:17px;accent-color:var(--red)}
+  .math{font:500 14px var(--mono);display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+  .math b{color:var(--muted);font-weight:600}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .stat{background:var(--paper);border-radius:8px;padding:10px 12px}
+  .stat span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .stat strong{display:block;font:600 24px var(--mono);margin-top:2px}
+  .stat em{display:block;font:500 12px var(--mono);color:var(--muted);font-style:normal}
+  table{border-collapse:collapse;width:100%;font:500 13px var(--mono)}
+  td{padding:3px 0;border-bottom:1px dotted var(--line)}
+  td:last-child{text-align:right}
+  tr.total td{border-bottom:0;border-top:2px solid var(--ink);font-weight:700;padding-top:6px}
+  .notes{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+  .notes li{padding:8px 10px;border-radius:6px;font-size:13px;border-left:4px solid}
+  .notes .warn{background:#fbf0dc;border-color:var(--warn)}
+  .notes .bad{background:#fdecec;border-color:var(--bad)}
+  .notes .ok{background:#e6f3ea;border-color:var(--ok)}
+  .notes .info{background:#eef0f4;border-color:#6b7a99}
+  svg{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:8px}
+  svg text{font-family:var(--body)}
+  .cap{font-size:12px;color:var(--muted);margin:6px 0 0}
+  .titleblock{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:8px}
+  @media print{
+    @page{size:letter;margin:.5in}
+    body{background:#fff}.noprint,.toolbar{display:none!important}
+    main{grid-template-columns:1fr 1fr;gap:12px;padding:0}.sticky{position:static}
+    section.card{break-inside:avoid;border-color:#999}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Picture Framing Calculator</h1>
+  <div class="toolbar noprint">
+    <button id="copyBtn" class="ghost">Copy summary</button>
+    <button id="printBtn">Print</button>
+    <button id="resetBtn" class="ghost">Reset</button>
+  </div>
+</header>
+
+<main>
+<div>
+  <section class="card">
+    <h2>Artwork</h2>
+    <div class="row r2">
+      <label class="f">Art title<input type="text" class="txt" id="title"></label>
+      <label class="f">Artist<input type="text" class="txt" id="artist"></label>
+    </div>
+    <div class="row r3">
+      <label class="f">Art height (H)<input type="text" id="artH" inputmode="decimal" placeholder='8 1/2'></label>
+      <label class="f">Art width (W)<input type="text" id="artW" inputmode="decimal" placeholder='11'></label>
+      <label class="f">Art depth (D)<input type="text" id="artD" inputmode="decimal" placeholder='0.01'></label>
+    </div>
+    <p class="hint">Inches. Decimals or fractions: 8.5, 8 1/2, 8-1/2, 3/16.</p>
+    <h3>Visible area (VA)</h3>
+    <div class="row r2">
+      <label class="f">VA height<input type="text" id="vaH" inputmode="decimal"></label>
+      <label class="f">VA width<input type="text" id="vaW" inputmode="decimal"></label>
+    </div>
+    <p class="hint" id="vaHint">The part of the art you want seen inside the mat. Blank means the full art size.</p>
+  </section>
+
+  <section class="card">
+    <h2>Grid ratios</h2>
+    <div class="row r3">
+      <label class="f">Ratio system
+        <select id="ratioSys">
+          <option value="golden">Golden Section 1:1.618</option>
+          <option value="din">DIN paper 1:1.414</option>
+          <option value="tatami">Tatami 1:2</option>
+        </select></label>
+      <label class="f">Mat weight
+        <select id="matWeight">
+          <option value="0.15">Narrow</option>
+          <option value="0.24" selected>Standard</option>
+          <option value="0.38">Wide</option>
+        </select></label>
+      <label class="f">Mat style
+        <select id="matStyle">
+          <option value="raised" selected>Raised, top:bottom 1:R</option>
+          <option value="strong">Strongly raised, 1:R&sup2;</option>
+          <option value="equal">Equal on all sides</option>
+        </select></label>
+    </div>
+    <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
+    <label class="tick"><input type="checkbox" id="recFace"> Recommend frame face width from the ratio</label>
+    <p class="hint">Ticked fields fill themselves and lock. Recommendations snap to 1/32 in. Applies to matted and float mounts.</p>
+  </section>
+
+  <section class="card">
+    <h2>Mounting</h2>
+    <div class="seg" role="radiogroup" aria-label="Mount type">
+      <input type="radio" name="mount" id="m1" value="matted" checked><label for="m1">Matted</label>
+      <input type="radio" name="mount" id="m2" value="float"><label for="m2">Float mount</label>
+      <input type="radio" name="mount" id="m3" value="flush"><label for="m3">Flush mount</label>
+    </div>
+    <h3 id="revTitle">Reveal (mat width)</h3>
+    <div class="inline">
+      <label class="f grow">All sides<input type="text" id="revAll" inputmode="decimal" placeholder="sets all four"></label>
+    </div>
+    <div class="row r4">
+      <label class="f">H up<input type="text" id="revUp" inputmode="decimal"></label>
+      <label class="f">H down<input type="text" id="revDown" inputmode="decimal"></label>
+      <label class="f">W left<input type="text" id="revLeft" inputmode="decimal"></label>
+      <label class="f">W right<input type="text" id="revRight" inputmode="decimal"></label>
+    </div>
+    <p class="hint">The frame lip covers about 1/4 in. of the OD on every side. Account for that in the reveal. A bottom-weighted mat usually has a larger H down.</p>
+  </section>
+
+  <section class="card">
+    <h2>Frame</h2>
+    <div class="row r3">
+      <label class="f">Clearance (ID = OD + )
+        <select id="clr">
+          <option value="0.0625">1/16 in.</option>
+          <option value="0.09375">3/32 in.</option>
+          <option value="0.125">1/8 in.</option>
+        </select></label>
+      <label class="f">Lip overlap<input type="text" id="lip" inputmode="decimal" value="0.25"></label>
+      <label class="f">Round to
+        <select id="prec">
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+          <option value="32" selected>1/32</option>
+        </select></label>
+    </div>
+
+    <h3>Glazing</h3>
+    <div class="inline">
+      <div class="seg" role="radiogroup" aria-label="Glazing">
+        <input type="radio" name="glaze" id="g1" value="plexi" checked><label for="g1">Plexi</label>
+        <input type="radio" name="glaze" id="g2" value="glass"><label for="g2">Glass</label>
+        <input type="radio" name="glaze" id="g3" value="none"><label for="g3">None</label>
+      </div>
+      <label class="f grow">Thickness<input type="text" id="glazeT" inputmode="decimal"></label>
+    </div>
+
+    <h3>Spacers</h3>
+    <div class="inline">
+      <div class="seg" role="radiogroup" aria-label="Spacers">
+        <input type="radio" name="spacer" id="s1" value="no" checked><label for="s1">No</label>
+        <input type="radio" name="spacer" id="s2" value="yes"><label for="s2">Yes</label>
+      </div>
+      <label class="f grow">Size<input type="text" id="spacerT" inputmode="decimal"></label>
+    </div>
+
+    <h3>Mat and backer</h3>
+    <div class="row r2">
+      <label class="f">Mat type<input type="text" class="txt" id="matType" placeholder="4-ply, white core"></label>
+      <label class="f">Mat thickness<input type="text" id="matT" inputmode="decimal" value="0.0625"></label>
+    </div>
+    <div class="row r2">
+      <label class="f">Backer type<input type="text" class="txt" id="backType" placeholder="foam core"></label>
+      <label class="f">Backer thickness<input type="text" id="backT" inputmode="decimal" value="0.1875"></label>
+    </div>
+
+    <h3>Strainer</h3>
+    <div class="inline">
+      <div class="seg" role="radiogroup" aria-label="Strainer">
+        <input type="radio" name="strainer" id="t1" value="no" checked><label for="t1">No</label>
+        <input type="radio" name="strainer" id="t2" value="yes"><label for="t2">Yes</label>
+      </div>
+      <label class="f grow">Size<input type="text" id="strainerT" inputmode="decimal"></label>
+    </div>
+
+    <h3>Moulding</h3>
+    <div class="row r2">
+      <label class="f">Material<input type="text" class="txt" id="material" placeholder="maple"></label>
+      <label class="f">Finish<input type="text" class="txt" id="finish" placeholder="satin black"></label>
+    </div>
+    <div class="row r2">
+      <label class="f">Moulding rabbet depth (optional)<input type="text" id="rabbet" inputmode="decimal" placeholder="checks against min depth"></label>
+      <label class="f">Face width (drawing only)<input type="text" id="face" inputmode="decimal" value="1.25"></label>
+    </div>
+  </section>
+</div>
+
+<div class="sticky">
+  <section class="card">
+    <h2>Results</h2>
+    <div class="titleblock"><span id="tbTitle"></span><span id="tbArtist"></span></div>
+    <h3 style="margin-top:0">Outside dimension (OD)</h3>
+    <p class="math" id="math"></p>
+    <h3>Frame ID</h3>
+    <div class="big" id="idBox"></div>
+    <h3>Min frame depth</h3>
+    <div class="big" style="grid-template-columns:1fr 1.4fr;align-items:start">
+      <div class="stat" id="depthBox"></div>
+      <table id="depthTbl"></table>
+    </div>
+    <h3>Checks</h3>
+    <ul class="notes" id="notes"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Frame profile</h2>
+    <div id="profile"></div>
+    <p class="cap">Cross-section, front of frame at top. Depths are to scale. Moulding shape is generic.</p>
+    <h3>Front view</h3>
+    <div id="front"></div>
+    <p class="cap">To scale. Red is the visible art, cream is mat or exposed backer, brown is the frame face.</p>
+  </section>
+</div>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const radio = n => document.querySelector('input[name=' + n + ']:checked').value;
+
+/* ---------- parsing and formatting ---------- */
+function parseIn(s){
+  if (s == null) return null;
+  s = String(s).trim().replace(/["”″]/g,'').replace(/\s*in(ches|\.)?$/i,'').trim();
+  if (!s) return null;
+  let m = s.match(/^(\d+)[\s-]+(\d+)\/(\d+)$/);
+  if (m) return +m[3] ? parseInt(m[1],10) + parseInt(m[2],10)/parseInt(m[3],10) : NaN;
+  m = s.match(/^(\d+)\/(\d+)$/);
+  if (m) return +m[2] ? parseInt(m[1],10)/parseInt(m[2],10) : NaN;
+  if (/^(\d+\.?\d*|\.\d+)$/.test(s)) return parseFloat(s);
+  return NaN;
+}
+const ok = x => typeof x === 'number' && isFinite(x);
+function dec(x){ return ok(x) ? (Math.round(x*1000)/1000).toString() : '—'; }
+function frac(x, den, up){
+  if (!ok(x)) return '—';
+  let total = up ? Math.ceil(x*den - 1e-9) : Math.round(x*den);
+  const w = Math.floor(total/den); let n = total % den, d = den;
+  if (n === 0) return w + '"';
+  while (n % 2 === 0){ n /= 2; d /= 2; }
+  return (w ? w + ' ' : '') + n + '/' + d + '"';
+}
+function both(x, up){
+  if (!ok(x)) return '—';
+  const f = frac(x, +$('prec').value, up);
+  return f + '  (' + dec(x) + ')';
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- presets ---------- */
+const GLAZE = {plexi:0.093, glass:0.098, none:0};
+$('glazeT').value = GLAZE.plexi;
+
+/* ---------- grid-ratio recommendations ---------- */
+const RATIO = {
+  golden: {v:(1 + Math.sqrt(5)) / 2, sym:'φ'},
+  din:    {v:Math.SQRT2, sym:'(√2)'},
+  tatami: {v:2, sym:'2'}
+};
+const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+const snap32 = x => Math.max(1/32, Math.round(x * 32) / 32);
+const toStr = x => frac(x, 32).replace('"', '');
+const stepK = (target, R) => Math.max(1, Math.round(-Math.log(target) / Math.log(R)));
+let recNotes = [];
+
+function applyRecs(){
+  recNotes = [];
+  const mount = radio('mount');
+  const lipV = parseIn($('lip').value), lip = ok(lipV) ? lipV : 0.25;
+  const sys = RATIO[$('ratioSys').value], R = sys.v;
+  const artH = parseIn($('artH').value), artW = parseIn($('artW').value);
+  let vaH = artH, vaW = artW;
+  if (mount === 'matted'){
+    const a = parseIn($('vaH').value), b = parseIn($('vaW').value);
+    if (ok(a)) vaH = a; if (ok(b)) vaW = b;
+  }
+  const dimsOk = ok(vaH) && ok(vaW);
+
+  if ($('recMat').checked && mount !== 'flush'){
+    if (!dimsOk){
+      recNotes.push('Enter the art size to get recommended reveals.');
+    } else {
+      const s = Math.min(vaH, vaW);
+      const k = stepK(parseFloat($('matWeight').value), R);
+      const S = s / Math.pow(R, k);                  // visible side width
+      const style = $('matStyle').value;
+      const f = style === 'equal' ? 1 : style === 'strong' ? R : Math.sqrt(R);
+      const vis = {up: S / f, side: S, down: S * f};
+      const rev = {up: snap32(vis.up + lip), side: snap32(vis.side + lip), down: snap32(vis.down + lip)};
+      $('revUp').value = toStr(rev.up); $('revDown').value = toStr(rev.down);
+      $('revLeft').value = toStr(rev.side); $('revRight').value = toStr(rev.side);
+      $('revAll').value = '';
+      const shown = x => frac(snap32(x), 32);
+      recNotes.push('Recommended reveal: top ' + toStr(rev.up) + ', sides ' + toStr(rev.side) + ', bottom ' + toStr(rev.down) +
+        ' in. Visible mat is ' + shown(vis.up) + ' / ' + shown(vis.side) + ' / ' + shown(vis.down) +
+        ' after the ' + dec(lip) + ' in. lip. Side module = short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
+        (style === 'equal' ? '. All sides equal.' : '. Sides sit at the geometric mean of top and bottom, so top:bottom = 1:' + (style === 'strong' ? 'R²' : 'R') + '.'));
+    }
+  }
+
+  if ($('recFace').checked){
+    if (!dimsOk){
+      recNotes.push('Enter the art size to get a recommended face width.');
+    } else {
+      const z = v => ok(v) ? v : 0;
+      let odH = vaH, odW = vaW;
+      if (mount !== 'flush'){
+        odH += z(parseIn($('revUp').value)) + z(parseIn($('revDown').value));
+        odW += z(parseIn($('revLeft').value)) + z(parseIn($('revRight').value));
+      }
+      const s = Math.min(odH, odW);
+      const k = stepK(0.08, R);
+      let face = snap32(s / Math.pow(R, k));
+      const floor = snap32(lip + 0.125);
+      if (face < floor) face = floor;
+      $('face').value = toStr(face);
+      recNotes.push('Recommended face width ' + toStr(face) + ' in. = OD short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
+        ' (' + Math.round(face / s * 100) + '% of the short side).');
+    }
+  }
+}
+
+/* ---------- state read ---------- */
+function read(){
+  applyRecs();
+  const mount = radio('mount');
+  const g = {};
+  const ids = ['artH','artW','artD','vaH','vaW','revUp','revDown','revLeft','revRight','lip','glazeT','spacerT','matT','backT','strainerT','rabbet','face'];
+  const bad = [];
+  ids.forEach(id => {
+    const v = parseIn($(id).value);
+    g[id] = v;
+    const isBad = Number.isNaN(v);
+    $(id).classList.toggle('bad', isBad);
+    if (isBad) bad.push(id);
+  });
+  const z = v => ok(v) ? v : 0;
+  const r = {mount, bad, clr: +$('clr').value};
+  r.lip = ok(g.lip) ? g.lip : 0.25;
+  r.artH = g.artH; r.artW = g.artW; r.artD = z(g.artD);
+  if (mount === 'matted'){
+    r.vaH = ok(g.vaH) ? g.vaH : g.artH;
+    r.vaW = ok(g.vaW) ? g.vaW : g.artW;
+    r.up = g.revUp; r.down = g.revDown; r.left = g.revLeft; r.right = g.revRight;
+  } else {
+    r.vaH = g.artH; r.vaW = g.artW;
+    if (mount === 'float'){ r.up = g.revUp; r.down = g.revDown; r.left = g.revLeft; r.right = g.revRight; }
+    else { r.up = r.down = r.left = r.right = 0; }
+  }
+  const needRev = mount !== 'flush';
+  const haveRev = !needRev || [r.up, r.down, r.left, r.right].every(ok);
+  r.odH = ok(r.vaH) && haveRev ? r.vaH + z(r.up) + z(r.down) : null;
+  r.odW = ok(r.vaW) && haveRev ? r.vaW + z(r.left) + z(r.right) : null;
+  r.idH = ok(r.odH) ? r.odH + r.clr : null;
+  r.idW = ok(r.odW) ? r.odW + r.clr : null;
+
+  r.glaze = radio('glaze'); r.glazeT = r.glaze === 'none' ? 0 : z(g.glazeT);
+  r.spacer = radio('spacer') === 'yes'; r.spacerT = r.spacer ? z(g.spacerT) : 0;
+  r.matT = mount === 'matted' ? z(g.matT) : 0;
+  r.backT = z(g.backT);
+  r.strainer = radio('strainer') === 'yes'; r.strainerT = r.strainer ? z(g.strainerT) : 0;
+  r.layers = [
+    {key:'glaze', name: r.glaze === 'glass' ? 'Glass' : 'Plexi', t:r.glazeT},
+    {key:'spacer', name:'Spacer', t:r.spacerT},
+    {key:'mat', name: $('matType').value.trim() ? 'Mat (' + $('matType').value.trim() + ')' : 'Mat', t:r.matT},
+    {key:'art', name:'Art', t:r.artD},
+    {key:'back', name: $('backType').value.trim() ? 'Backer (' + $('backType').value.trim() + ')' : 'Backer', t:r.backT},
+    {key:'strainer', name:'Strainer', t:r.strainerT}
+  ];
+  r.minDepth = r.layers.reduce((a,l) => a + l.t, 0);
+  r.rabbet = g.rabbet;
+  r.face = ok(g.face) ? g.face : 1.25;
+  return r;
+}
+
+/* ---------- results panel ---------- */
+function renderResults(r){
+  $('tbTitle').textContent = $('title').value.trim();
+  $('tbArtist').textContent = $('artist').value.trim();
+
+  const line = (lab, va, a, b, od) =>
+    '<b>' + lab + '</b><span>' + [dec(va) + '"', r.mount === 'flush' ? '' : '+ ' + dec(a) + ' + ' + dec(b), '= ' + dec(od) + '"'].filter(Boolean).join('  ') + '</span>';
+  if (r.mount === 'flush'){
+    $('math').innerHTML =
+      '<b>H</b><span>' + dec(r.vaH) + '" = ' + frac(r.odH, +$('prec').value) + '</span>' +
+      '<b>W</b><span>' + dec(r.vaW) + '" = ' + frac(r.odW, +$('prec').value) + '</span>' +
+      '<b></b><span style="color:var(--muted)">No reveal. OD equals VA.</span>';
+  } else {
+    $('math').innerHTML =
+      line('H', r.vaH, r.up, r.down, r.odH) + '<b></b><span style="color:var(--muted)">OD H = ' + both(r.odH) + '</span>' +
+      line('W', r.vaW, r.left, r.right, r.odW) + '<b></b><span style="color:var(--muted)">OD W = ' + both(r.odW) + '</span>';
+  }
+
+  $('idBox').innerHTML =
+    '<div class="stat"><span>Frame ID height</span><strong>' + frac(r.idH, +$('prec').value) + '</strong><em>' + dec(r.idH) + ' in.</em></div>' +
+    '<div class="stat"><span>Frame ID width</span><strong>' + frac(r.idW, +$('prec').value) + '</strong><em>' + dec(r.idW) + ' in.</em></div>';
+
+  $('depthBox').innerHTML =
+    '<span>Min depth</span><strong>' + frac(r.minDepth, +$('prec').value, true) + '</strong><em>' + dec(r.minDepth) + ' in. (rounded up)</em>';
+  const rows = r.layers.filter(l => l.t > 0).map(l => '<tr><td>' + esc(l.name) + '</td><td>' + dec(l.t) + '</td></tr>').join('');
+  $('depthTbl').innerHTML = rows + '<tr class="total"><td>Total</td><td>' + dec(r.minDepth) + '</td></tr>';
+
+  const n = [];
+  const add = (cls, msg) => n.push('<li class="' + cls + '">' + msg + '</li>');
+  if (r.bad.length) add('bad', 'One or more fields are not readable as a number or fraction (outlined in red).');
+  if (!ok(r.artH) || !ok(r.artW)) add('info', 'Enter the art height and width to get dimensions.');
+  else if (r.mount !== 'flush' && !(ok(r.up) && ok(r.down) && ok(r.left) && ok(r.right))) add('info', 'Enter all four reveals.');
+  if (ok(r.odH) && ok(r.odW)){
+    if (r.mount === 'flush'){
+      add('warn', 'Flush mount: the frame lip will cover about ' + dec(r.lip) + ' in. of the art on every side.');
+    } else {
+      const small = [['up',r.up],['down',r.down],['left',r.left],['right',r.right]].filter(p => p[1] < r.lip - 1e-9).map(p => p[0]);
+      if (small.length) add('warn', 'Reveal on ' + small.join(', ') + ' is under the ' + dec(r.lip) + ' in. lip. The frame will cover part of the visible area there.');
+      else add('ok', 'Visible reveal after the lip: ' + ['up','down','left','right'].map(k => k + ' ' + dec(r[k] - r.lip)).join(', ') + ' in.');
+    }
+    if (r.mount === 'matted' && ok(r.artH) && ok(r.artW)){
+      if (r.odH + 1e-9 < r.artH || r.odW + 1e-9 < r.artW)
+        add('bad', 'Mat OD (' + dec(r.odH) + ' × ' + dec(r.odW) + ') is smaller than the art (' + dec(r.artH) + ' × ' + dec(r.artW) + '). The art would stick out past the mat.');
+      if (r.vaH > r.artH + 1e-9 || r.vaW > r.artW + 1e-9)
+        add('bad', 'Visible area is larger than the art. The mat window would show past the art.');
+      else if (r.artH - r.vaH < 0.25 - 1e-9 || r.artW - r.vaW < 0.25 - 1e-9)
+        add('warn', 'The mat window overlaps the art by under 1/8 in. per side. That leaves little to hinge or tape to.');
+    }
+    if (r.mount === 'float' && r.up > 0 && r.glaze === 'none') add('info', 'Float mount without glazing leaves the art exposed. Consider glazing.');
+  }
+  if (ok(r.rabbet)){
+    if (r.rabbet + 1e-9 < r.minDepth) add('bad', 'Moulding rabbet (' + dec(r.rabbet) + ' in.) is shallower than the ' + dec(r.minDepth) + ' in. needed. Pick a deeper moulding.');
+    else add('ok', 'Moulding rabbet clears the stack with ' + dec(r.rabbet - r.minDepth) + ' in. to spare.');
+  }
+  if (r.strainer && r.strainerT === 0) add('info', 'Strainer is set to Yes with no size.');
+  recNotes.forEach(t => add('info', esc(t)));
+  $('notes').innerHTML = n.join('') || '<li class="info">No issues.</li>';
+}
+
+/* ---------- profile drawing ---------- */
+const FILL = {glaze:'#cfe6f2', spacer:'#d7b98a', mat:'#f6efdc', art:'#b23a48', back:'#a9a69f', strainer:'#8b6b45'};
+
+function drawProfile(r){
+  const lip = r.lip, F = Math.max(r.face, lip + 0.125), xr = F - lip, lipT = 0.1875;
+  const R = ok(r.rabbet) ? r.rabbet : Math.max(r.minDepth, 0.25);
+  const bodyDepth = Math.max(R, r.minDepth, 0.25);
+  const total = lipT + bodyDepth;
+  const S = Math.min(170, 210 / total);
+  const x0 = 24, y0 = 44;
+  const sliceW = 210;
+  const sx = x0 + xr * S;                    // stack start (rabbet wall)
+  const ex = sx + sliceW;                    // stack end
+  const W = ex + 220, H = y0 + total * S + 56;
+  let g = '';
+
+  // moulding
+  const pts = [
+    [x0, y0], [x0 + F*S, y0], [x0 + F*S, y0 + lipT*S], [sx, y0 + lipT*S],
+    [sx, y0 + (lipT + R)*S], [x0, y0 + (lipT + R)*S]
+  ].map(p => p.join(',')).join(' ');
+  g += '<polygon points="' + pts + '" fill="#b98a54" stroke="#6e4a22" stroke-width="1.5"/>';
+
+  // layers
+  let y = y0 + lipT*S;
+  const labels = [];
+  r.layers.forEach(l => {
+    if (!(l.t > 0)) return;
+    const h = Math.max(l.t * S, 2.5);
+    if (l.key === 'spacer'){
+      g += '<rect x="' + sx + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="none" stroke="#9a958a" stroke-dasharray="3 3"/>';
+      g += '<rect x="' + sx + '" y="' + y + '" width="' + (0.3*S) + '" height="' + h + '" fill="' + FILL.spacer + '" stroke="#6e4a22" stroke-width="1"/>';
+    } else if (l.key === 'strainer'){
+      g += '<rect x="' + sx + '" y="' + y + '" width="' + (0.75*S) + '" height="' + h + '" fill="' + FILL.strainer + '" stroke="#4a3320" stroke-width="1"/>';
+    } else {
+      g += '<rect x="' + sx + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="' + FILL[l.key] + '" stroke="#444" stroke-width="1"' + (l.key === 'glaze' ? ' fill-opacity=".8"' : '') + '/>';
+    }
+    labels.push({y: y + h/2, name: l.name, t: l.t, edge: l.key === 'spacer' ? sx + 0.3*S : l.key === 'strainer' ? sx + 0.75*S : ex});
+    y += h;
+  });
+
+  // break line at stack end
+  let zz = 'M' + ex + ',' + (y0 + lipT*S);
+  const yEnd = Math.max(y, y0 + lipT*S + 4);
+  for (let yy = y0 + lipT*S, k = 0; yy < yEnd; yy += 7, k++) zz += ' L' + (ex + (k % 2 ? 4 : -4)) + ',' + (yy + 3.5);
+  g += '<path d="' + zz + '" fill="none" stroke="#1c1b1a" stroke-width="1.2"/>';
+  g += '<text x="' + (ex - 6) + '" y="' + (yEnd + 16) + '" font-size="11" fill="#6b665d" text-anchor="end">to center of frame</text>';
+
+  // labels, spread so they do not collide
+  labels.sort((a,b) => a.y - b.y);
+  let last = -99;
+  labels.forEach(L => { L.ly = Math.max(L.y, last + 17); last = L.ly; });
+  const lx = ex + 30;
+  labels.forEach(L => {
+    g += '<polyline points="' + L.edge + ',' + L.y + ' ' + (ex + 14) + ',' + L.y + ' ' + (lx - 4) + ',' + L.ly + '" fill="none" stroke="#9a958a" stroke-width="1"/>';
+    g += '<text x="' + lx + '" y="' + (L.ly + 4) + '" font-size="12" fill="#1c1b1a">' + esc(L.name) + ' <tspan fill="#6b665d">' + dec(L.t) + '"</tspan></text>';
+  });
+
+  // lip callout
+  const ly = y0 - 14;
+  g += '<line x1="' + sx + '" y1="' + (ly-5) + '" x2="' + sx + '" y2="' + (y0) + '" stroke="#8a1f2b" stroke-width="1"/>' +
+       '<line x1="' + (x0+F*S) + '" y1="' + (ly-5) + '" x2="' + (x0+F*S) + '" y2="' + y0 + '" stroke="#8a1f2b" stroke-width="1"/>' +
+       '<line x1="' + sx + '" y1="' + ly + '" x2="' + (x0+F*S) + '" y2="' + ly + '" stroke="#8a1f2b" stroke-width="1.5"/>';
+  g += '<text x="' + (x0 + F*S + 8) + '" y="' + (ly + 4) + '" font-size="12" fill="#8a1f2b">lip ' + dec(lip) + '" over OD</text>';
+
+  // depth bracket (min depth) on the left of the stack, inside moulding wall edge
+  const bx = ex + 12 + 0, by1 = y0 + lipT*S, by2 = Math.max(y, by1 + 4);
+  g += '<text x="' + x0 + '" y="' + (y0 + total*S + 34) + '" font-size="13" font-weight="600" fill="#1c1b1a">Min depth ' + dec(r.minDepth) + '" (' + frac(r.minDepth, +$('prec').value, true) + ')</text>';
+  if (ok(r.rabbet)){
+    const okd = r.rabbet + 1e-9 >= r.minDepth;
+    g += '<text x="' + x0 + '" y="' + (y0 + total*S + 50) + '" font-size="12" fill="' + (okd ? '#25623a' : '#a3141f') + '">Moulding rabbet ' + dec(r.rabbet) + '" ' + (okd ? 'fits' : 'is too shallow') + '</text>';
+    if (!okd){
+      g += '<line x1="' + (x0 - 6) + '" y1="' + (y0 + (lipT + R)*S) + '" x2="' + (ex + 14) + '" y2="' + (y0 + (lipT + R)*S) + '" stroke="#a3141f" stroke-dasharray="5 3" stroke-width="1.5"/>';
+    }
+  }
+  // ID/OD edge marker
+  g += '<line x1="' + sx + '" y1="' + (y0 + lipT*S) + '" x2="' + sx + '" y2="' + (y0 + (lipT+R)*S) + '" stroke="#1c1b1a" stroke-width="1"/>';
+
+  $('profile').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Frame cross-section">' + g + '</svg>';
+}
+
+/* ---------- front view ---------- */
+function drawFront(r){
+  if (!(ok(r.odH) && ok(r.odW))){
+    $('front').innerHTML = '<svg viewBox="0 0 360 120"><text x="180" y="64" text-anchor="middle" font-size="13" fill="#6b665d">Enter dimensions to see the front view</text></svg>';
+    return;
+  }
+  const lip = r.lip, F = Math.max(r.face, lip + 0.125), xr = F - lip;
+  const outerW = r.idW + 2*xr, outerH = r.idH + 2*xr;
+  const VW = 400, VH = 320, mx = 50, my = 34;
+  const S = Math.min((VW - mx*2) / outerW, (VH - my*2 - 18) / outerH);
+  const ox = (VW - outerW*S)/2, oy = my;
+  const odx = ox + xr*S + (r.clr/2)*S, ody = oy + xr*S + (r.clr/2)*S;
+  const winX = ox + F*S, winY = oy + F*S, winW = (outerW - 2*F)*S, winH = (outerH - 2*F)*S;
+  const base = r.mount === 'matted' ? '#f6efdc' : r.mount === 'float' ? '#a9a69f' : '#b23a48';
+  let g = '';
+  g += '<rect x="' + odx + '" y="' + ody + '" width="' + (r.odW*S) + '" height="' + (r.odH*S) + '" fill="' + base + '" stroke="#444" stroke-width=".8"/>';
+  if (r.mount !== 'flush'){
+    g += '<rect x="' + (odx + r.left*S) + '" y="' + (ody + r.up*S) + '" width="' + (r.vaW*S) + '" height="' + (r.vaH*S) + '" fill="#b23a48" stroke="#444" stroke-width=".8"/>';
+  }
+  // frame ring
+  const d = 'M' + ox + ',' + oy + ' h' + (outerW*S) + ' v' + (outerH*S) + ' h' + (-outerW*S) + ' Z ' +
+            'M' + winX + ',' + winY + ' h' + winW + ' v' + winH + ' h' + (-winW) + ' Z';
+  g += '<path d="' + d + '" fill="#b98a54" fill-rule="evenodd" stroke="#6e4a22" stroke-width="1.5"/>';
+  g += '<rect x="' + winX + '" y="' + winY + '" width="' + winW + '" height="' + winH + '" fill="none" stroke="#6e4a22" stroke-width="1"/>';
+
+  // center label
+  const cx = odx + (r.mount === 'flush' ? 0 : r.left*S) + (r.vaW*S)/2, cy = ody + (r.mount === 'flush' ? 0 : r.up*S) + (r.vaH*S)/2;
+  if (r.vaW*S > 90 && r.vaH*S > 30){
+    g += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">VA ' + dec(r.vaW) + ' × ' + dec(r.vaH) + '</text>';
+  }
+  // OD dimension lines
+  const dy = oy + outerH*S + 14;
+  g += '<line x1="' + odx + '" y1="' + dy + '" x2="' + (odx + r.odW*S) + '" y2="' + dy + '" stroke="#8a1f2b" stroke-width="1.2"/>' +
+       '<line x1="' + odx + '" y1="' + (dy-4) + '" x2="' + odx + '" y2="' + (dy+4) + '" stroke="#8a1f2b"/>' +
+       '<line x1="' + (odx + r.odW*S) + '" y1="' + (dy-4) + '" x2="' + (odx + r.odW*S) + '" y2="' + (dy+4) + '" stroke="#8a1f2b"/>' +
+       '<text x="' + (odx + r.odW*S/2) + '" y="' + (dy + 17) + '" text-anchor="middle" font-size="12" fill="#8a1f2b">OD W ' + dec(r.odW) + '"</text>';
+  const dx = ox + outerW*S + 14;
+  g += '<line x1="' + dx + '" y1="' + ody + '" x2="' + dx + '" y2="' + (ody + r.odH*S) + '" stroke="#8a1f2b" stroke-width="1.2"/>' +
+       '<line x1="' + (dx-4) + '" y1="' + ody + '" x2="' + (dx+4) + '" y2="' + ody + '" stroke="#8a1f2b"/>' +
+       '<line x1="' + (dx-4) + '" y1="' + (ody + r.odH*S) + '" x2="' + (dx+4) + '" y2="' + (ody + r.odH*S) + '" stroke="#8a1f2b"/>' +
+       '<text transform="translate(' + (dx + 16) + ',' + (ody + r.odH*S/2) + ') rotate(90)" text-anchor="middle" font-size="12" fill="#8a1f2b">OD H ' + dec(r.odH) + '"</text>';
+
+  $('front').innerHTML = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Front view of the frame">' + g + '</svg>';
+}
+
+/* ---------- summary ---------- */
+function summary(r){
+  const p = +$('prec').value;
+  const L = [];
+  L.push('AlmFab Picture Frame Worksheet');
+  if ($('title').value.trim()) L.push('Art: ' + $('title').value.trim() + ($('artist').value.trim() ? ' by ' + $('artist').value.trim() : ''));
+  L.push('Art size: ' + dec(r.artH) + ' H x ' + dec(r.artW) + ' W x ' + dec(r.artD) + ' D');
+  L.push('Mount: ' + r.mount + '   VA: ' + dec(r.vaH) + ' H x ' + dec(r.vaW) + ' W');
+  if (r.mount !== 'flush') L.push('Reveal: up ' + dec(r.up) + ', down ' + dec(r.down) + ', left ' + dec(r.left) + ', right ' + dec(r.right));
+  L.push('OD: ' + dec(r.odH) + ' H x ' + dec(r.odW) + ' W  (' + frac(r.odH,p) + ' x ' + frac(r.odW,p) + ')');
+  L.push('Frame ID: ' + dec(r.idH) + ' H x ' + dec(r.idW) + ' W  (' + frac(r.idH,p) + ' x ' + frac(r.idW,p) + ')');
+  L.push('Glazing: ' + r.glaze + (r.glazeT ? ' ' + dec(r.glazeT) : '') + '   Spacers: ' + (r.spacer ? dec(r.spacerT) : 'no') + '   Strainer: ' + (r.strainer ? dec(r.strainerT) : 'no'));
+  L.push('Mat: ' + ($('matType').value.trim() || '-') + '   Backer: ' + ($('backType').value.trim() || '-'));
+  L.push('Min frame depth: ' + dec(r.minDepth) + ' (' + frac(r.minDepth,p,true) + ')');
+  L.push('Material: ' + ($('material').value.trim() || '-') + '   Finish: ' + ($('finish').value.trim() || '-'));
+  return L.join('\n');
+}
+
+/* ---------- wiring ---------- */
+let last;
+function render(){
+  const m = radio('mount');
+  const matted = m === 'matted', flush = m === 'flush';
+  ['vaH','vaW'].forEach(id => $(id).disabled = !matted);
+  $('recMat').disabled = flush;
+  const lockRev = flush || ($('recMat').checked && !flush);
+  ['revUp','revDown','revLeft','revRight','revAll'].forEach(id => $(id).disabled = lockRev);
+  ['matWeight','matStyle'].forEach(id => $(id).disabled = flush || !$('recMat').checked);
+  $('face').disabled = $('recFace').checked;
+  $('matT').disabled = $('matType').disabled = !matted;
+  $('glazeT').disabled = radio('glaze') === 'none';
+  $('spacerT').disabled = radio('spacer') === 'no';
+  $('strainerT').disabled = radio('strainer') === 'no';
+  $('revTitle').textContent = matted ? 'Reveal (mat width)' : m === 'float' ? 'Reveal (exposed backer)' : 'Reveal (none)';
+  $('vaHint').textContent = matted
+    ? 'The part of the art you want seen inside the mat. Blank means the full art size.'
+    : 'Float and flush mounts show the full art, so VA equals the art size.';
+  $('vaH').placeholder = $('artH').value || ''; $('vaW').placeholder = $('artW').value || '';
+  last = read();
+  renderResults(last);
+  drawProfile(last);
+  drawFront(last);
+}
+document.querySelectorAll('input[type=text], select').forEach(el => el.addEventListener('input', render));
+document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(el => el.addEventListener('change', render));
+
+$('revAll').addEventListener('input', () => {
+  const v = $('revAll').value;
+  ['revUp','revDown','revLeft','revRight'].forEach(id => $(id).value = v);
+  render();
+});
+document.querySelectorAll('input[name=glaze]').forEach(el => el.addEventListener('change', () => {
+  $('glazeT').value = GLAZE[radio('glaze')]; render();
+}));
+document.querySelectorAll('input[name=spacer]').forEach(el => el.addEventListener('change', () => {
+  $('spacerT').value = radio('spacer') === 'yes' ? 0.125 : ''; render();
+}));
+document.querySelectorAll('input[name=strainer]').forEach(el => el.addEventListener('change', () => {
+  $('strainerT').value = radio('strainer') === 'yes' ? 0.75 : ''; render();
+}));
+
+$('printBtn').onclick = () => window.print();
+$('copyBtn').onclick = async () => {
+  const t = summary(last);
+  try { await navigator.clipboard.writeText(t); $('copyBtn').textContent = 'Copied'; }
+  catch(e){ window.prompt('Copy this summary:', t); }
+  setTimeout(() => $('copyBtn').textContent = 'Copy summary', 1200);
+};
+$('resetBtn').onclick = () => {
+  document.querySelectorAll('input[type=text]').forEach(el => el.value = '');
+  $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25;
+  $('m1').checked = $('g1').checked = $('s1').checked = $('t1').checked = true;
+  $('clr').value = '0.0625'; $('prec').value = '32'; $('glazeT').value = GLAZE.plexi;
+  $('recMat').checked = $('recFace').checked = false;
+  $('ratioSys').value = 'golden'; $('matWeight').value = '0.24'; $('matStyle').value = 'raised';
+  render();
+};
+render();
+</script>
+</body>
+</html>
