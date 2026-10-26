@@ -388,7 +388,7 @@ function applyRecs(){
       const shown = x => frac(snap32(x), 32);
       recNotes.push('Recommended reveal: top ' + toStr(rev.up) + ', sides ' + toStr(rev.side) + ', bottom ' + toStr(rev.down) +
         ' in. Visible mat is ' + shown(vis.up) + ' / ' + shown(vis.side) + ' / ' + shown(vis.down) +
-        ' after the ' + dec(lip) + ' in. lip. Side module = short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
+        ' after the ' + frac(lip, 32) + ' lip. Side module = short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
         (style === 'equal' ? '. Centered, all sides equal.' : style === 'three' ? '. Top and sides are equal, bottom is ' + Math.sqrt(R).toFixed(2) + ' times the sides.' : '. Sides sit at the geometric mean of top and bottom, so top:bottom = 1:' + (style === 'strong' ? 'R²' : 'R') + '.'));
     }
   }
@@ -510,10 +510,10 @@ function renderResults(r){
   else if (r.mount !== 'flush' && !(ok(r.up) && ok(r.down) && ok(r.left) && ok(r.right))) add('info', 'Enter all four reveals.');
   if (ok(r.odH) && ok(r.odW)){
     if (r.mount === 'flush'){
-      add('warn', 'Flush mount: the frame lip will cover about ' + dec(r.lip) + ' in. of the art on every side.');
+      add('warn', 'Flush mount: the frame lip will cover about ' + frac(r.lip, +$('prec').value) + ' of the art on every side.');
     } else {
       const small = [['up',r.up],['down',r.down],['left',r.left],['right',r.right]].filter(p => p[1] < r.lip - 1e-9).map(p => p[0]);
-      if (small.length) add('warn', 'Reveal on ' + small.join(', ') + ' is under the ' + dec(r.lip) + ' in. lip. The frame will cover part of the visible area there.');
+      if (small.length) add('warn', 'Reveal on ' + small.join(', ') + ' is under the ' + frac(r.lip, +$('prec').value) + ' lip. The frame will cover part of the visible area there.');
       else add('ok', 'Visible reveal after the lip: ' + ['up','down','left','right'].map(k => k + ' ' + dec(r[k] - r.lip)).join(', ') + ' in.');
     }
     if (r.mount === 'matted' && ok(r.artH) && ok(r.artW)){
@@ -612,7 +612,7 @@ function drawProfile(r){
   g += '<line x1="' + sx + '" y1="' + (ly-5) + '" x2="' + sx + '" y2="' + (y0) + '" stroke="#8a1f2b" stroke-width="1"/>' +
        '<line x1="' + (x0+F*S) + '" y1="' + (ly-5) + '" x2="' + (x0+F*S) + '" y2="' + y0 + '" stroke="#8a1f2b" stroke-width="1"/>' +
        '<line x1="' + sx + '" y1="' + ly + '" x2="' + (x0+F*S) + '" y2="' + ly + '" stroke="#8a1f2b" stroke-width="1.5"/>';
-  g += '<text x="' + (x0 + F*S + 8) + '" y="' + (ly + 4) + '" font-size="12" fill="#8a1f2b">lip ' + dec(lip) + '" over OD</text>';
+  g += '<text x="' + (x0 + F*S + 8) + '" y="' + (ly + 4) + '" font-size="12" fill="#8a1f2b">lip ' + frac(lip, +$('prec').value) + ' over OD</text>';
 
   g += '<text x="' + x0 + '" y="' + (y0 + total*S + 66) + '" font-size="12" fill="#6b665d">Clearance ' + frac(r.clr / 2, 32) + ' per side (ID = OD + ' + frac(r.clr, 32) + '). Lip ' + frac(lip, +$('prec').value) + ' over the OD.</text>';
   // depth bracket (min depth) on the left of the stack, inside moulding wall edge
@@ -715,7 +715,7 @@ function renderSpecs(r){
     ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(x => ok(x) ? dec(x) : '\u2014').join(' / ') + ' in.'],
     ['Glazing', r.glaze === 'none' ? 'None' : (r.glaze === 'glass' ? 'Glass ' : 'Plexi ') + d3(r.glazeT), 'Spacers', r.spacer ? d3(r.spacerT) : 'No'],
     ['Mat', r.mount === 'matted' ? v('matType') + ' ' + d3(r.matT) : 'n/a', 'Backer', v('backType') + ' ' + d3(r.backT)],
-    ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip over OD / lip thick', d3(r.clr) + ' / ' + d3(r.lip) + ' / ' + d3(r.lipT)],
+    ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip over OD / lip thick', [r.clr, r.lip, r.lipT].map(x => frac(x, +$('prec').value)).join(' / ')],
     ['Moulding material', v('material'), 'Finish', v('finish')]
   ];
   $('specs').innerHTML = rows.map(c => '<tr>' + c.map(x => '<td>' + esc(x) + '</td>').join('') + '</tr>').join('');
@@ -737,7 +737,7 @@ function summary(r){
   L.push('Glazing: ' + r.glaze + (r.glazeT ? ' ' + dec(r.glazeT) : '') + '   Spacers: ' + (r.spacer ? dec(r.spacerT) : 'no') + '   Strainer: ' + (r.strainer ? dec(r.strainerT) : 'no'));
   L.push('Mat: ' + ($('matType').value.trim() || '-') + '   Backer: ' + ($('backType').value.trim() || '-'));
   L.push('Required rabbet depth: ' + dec(r.minDepth) + ' (' + frac(r.minDepth,p,true) + ')');
-  if (ok(r.rabbet)) L.push('Moulding rabbet: ' + dec(r.rabbet) + '   Lip thickness: ' + dec(r.lipT) + '   Moulding depth: ' + dec(r.lipT + r.rabbet));
+  if (ok(r.rabbet)) L.push('Moulding rabbet: ' + dec(r.rabbet) + '   Lip thickness: ' + frac(r.lipT, p) + '   Moulding depth: ' + dec(r.lipT + r.rabbet));
   L.push('Material: ' + ($('material').value.trim() || '-') + '   Finish: ' + ($('finish').value.trim() || '-'));
   return L.join('\n');
 }
