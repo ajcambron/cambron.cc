@@ -161,7 +161,8 @@
         <select id="matStyle">
           <option value="raised" selected>Raised, top:bottom 1:R</option>
           <option value="strong">Strongly raised, 1:R&sup2;</option>
-          <option value="equal">Equal on all sides</option>
+          <option value="three">Three sides even, heavier bottom</option>
+          <option value="equal">Centered, equal on all sides</option>
         </select></label>
     </div>
     <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
@@ -377,7 +378,9 @@ function applyRecs(){
       const S = s / Math.pow(R, k);                  // visible side width
       const style = $('matStyle').value;
       const f = style === 'equal' ? 1 : style === 'strong' ? R : Math.sqrt(R);
-      const vis = {up: S / f, side: S, down: S * f};
+      const vis = style === 'three'
+        ? {up: S, side: S, down: S * Math.sqrt(R)}
+        : {up: S / f, side: S, down: S * f};
       const rev = {up: snap32(vis.up + lip), side: snap32(vis.side + lip), down: snap32(vis.down + lip)};
       $('revUp').value = toStr(rev.up); $('revDown').value = toStr(rev.down);
       $('revLeft').value = toStr(rev.side); $('revRight').value = toStr(rev.side);
@@ -386,7 +389,7 @@ function applyRecs(){
       recNotes.push('Recommended reveal: top ' + toStr(rev.up) + ', sides ' + toStr(rev.side) + ', bottom ' + toStr(rev.down) +
         ' in. Visible mat is ' + shown(vis.up) + ' / ' + shown(vis.side) + ' / ' + shown(vis.down) +
         ' after the ' + dec(lip) + ' in. lip. Side module = short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
-        (style === 'equal' ? '. All sides equal.' : '. Sides sit at the geometric mean of top and bottom, so top:bottom = 1:' + (style === 'strong' ? 'R²' : 'R') + '.'));
+        (style === 'equal' ? '. Centered, all sides equal.' : style === 'three' ? '. Top and sides are equal, bottom is ' + Math.sqrt(R).toFixed(2) + ' times the sides.' : '. Sides sit at the geometric mean of top and bottom, so top:bottom = 1:' + (style === 'strong' ? 'R²' : 'R') + '.'));
     }
   }
 
