@@ -544,12 +544,12 @@ function drawProfile(r){
   const bodyDepth = Math.max(R, r.minDepth, 0.25);
   const total = lipT + bodyDepth;
   const S = Math.min(170, 210 / total);
-  const x0 = 100, y0 = 66;
+  const x0 = 80, y0 = 66;
   const sliceW = 210;
   const sx = x0 + xr * S;                    // rabbet wall
   const sx2 = sx + (r.clr / 2) * S;          // OD edge: stack starts here (ID = OD + clearance)
   const ex = sx2 + sliceW;                   // stack end
-  const W = ex + 220, H = y0 + total * S + 78;
+  let W = ex + 220; const H = y0 + total * S + 78;
   let g = '';
 
   // moulding
@@ -560,6 +560,7 @@ function drawProfile(r){
   g += '<polygon points="' + pts + '" fill="#b98a54" stroke="#6e4a22" stroke-width="1.5"/>';
 
   // layers
+  const yTop0 = y0 + lipT*S;
   let y = y0 + lipT*S;
   const labels = [];
   r.layers.forEach(l => {
@@ -593,6 +594,18 @@ function drawProfile(r){
     g += '<polyline points="' + L.edge + ',' + L.y + ' ' + (ex + 14) + ',' + L.y + ' ' + (lx - 4) + ',' + L.ly + '" fill="none" stroke="#9a958a" stroke-width="1"/>';
     g += '<text x="' + lx + '" y="' + (L.ly + 4) + '" font-size="12" fill="#1c1b1a">' + esc(L.name) + ' <tspan fill="#6b665d">' + dec(L.t) + '"</tspan></text>';
   });
+
+  // required rabbet depth, to the right of the layer labels
+  {
+    const chars = Math.max(0, ...labels.map(L => (L.name + ' ' + dec(L.t) + '"').length));
+    const xd = lx + chars * 6.6 + 12, yb = Math.max(y, yTop0 + 4);
+    const DCr = '#8a1f2b';
+    g += '<line x1="' + xd + '" y1="' + yTop0 + '" x2="' + xd + '" y2="' + yb + '" stroke="' + DCr + '" stroke-width="1.3"/>' +
+         '<line x1="' + (xd-4) + '" y1="' + yTop0 + '" x2="' + (xd+4) + '" y2="' + yTop0 + '" stroke="' + DCr + '"/>' +
+         '<line x1="' + (xd-4) + '" y1="' + yb + '" x2="' + (xd+4) + '" y2="' + yb + '" stroke="' + DCr + '"/>' +
+         '<text transform="translate(' + (xd + 17) + ',' + ((yTop0 + yb) / 2) + ') rotate(90)" font-size="12" font-weight="600" fill="' + DCr + '" text-anchor="middle">need ' + frac(r.minDepth, +$('prec').value, true) + '</text>';
+    W = xd + 30;
+  }
 
   // lip callout
   const ly = y0 - 14;
@@ -637,10 +650,7 @@ function drawProfile(r){
   // min depth of the stack and, if entered, the moulding rabbet depth
   if (ok(r.rabbet)){
     g += vdim(x0 - 12, yTop, yTop + R*S, 'rabbet ' + frac(R, fs));
-    g += vdim(x0 - 36, yTop, yTop + r.minDepth*S, 'need ' + frac(r.minDepth, fs, true));
-    g += vdim(x0 - 62, y0, yTop + R*S, 'moulding ' + frac(lipT + R, fs));
-  } else {
-    g += vdim(x0 - 12, yTop, yTop + r.minDepth*S, 'need ' + frac(r.minDepth, fs, true));
+    g += vdim(x0 - 38, y0, yTop + R*S, 'moulding ' + frac(lipT + R, fs));
   }
   // ID/OD edge marker
   g += '<line x1="' + sx + '" y1="' + (y0 + lipT*S) + '" x2="' + sx + '" y2="' + (y0 + (lipT+R)*S) + '" stroke="#1c1b1a" stroke-width="1"/>';
