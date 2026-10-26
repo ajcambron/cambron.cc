@@ -100,11 +100,12 @@
     .stat{padding:5px 8px}
     .stat strong{font-size:17px}
     .stat em{font-size:10px}
-    table{font-size:11px}
+    table{font-size:10.5px}
+    #depthTbl td{padding:1px 0}
     .notes li{padding:4px 7px;font-size:10.5px}
     svg{border:0;background:#fff}
     #front svg{max-height:2.1in}
-    #profile svg{max-height:2.3in}
+    #profile svg{max-height:2.2in}
     #checksCard{align-self:stretch}
   }
 </style>
@@ -250,7 +251,7 @@
       <label class="f">Finish<input type="text" class="txt" id="finish" placeholder="satin black"></label>
     </div>
     <div class="row r3">
-      <label class="f">Rabbet depth (optional)<input type="text" id="rabbet" inputmode="decimal" placeholder="checks vs min depth"></label>
+      <label class="f">Rabbet depth (optional)<input type="text" id="rabbet" inputmode="decimal" placeholder="checks vs required"></label>
       <label class="f">Face width (drawing)<input type="text" id="face" inputmode="decimal" value="1.25"></label>
       <label class="f">Lip thickness, front to back<input type="text" id="lipT" inputmode="decimal" value="0.1875"></label>
     </div>
@@ -276,7 +277,7 @@
         <div class="big" id="idBox"></div>
       </div>
       <div>
-        <h3 style="margin-top:0">Min frame depth</h3>
+        <h3 style="margin-top:0">Required rabbet depth</h3>
         <div class="big" style="grid-template-columns:1fr 1.4fr;align-items:start">
           <div class="stat" id="depthBox"></div>
           <table id="depthTbl"></table>
@@ -488,9 +489,16 @@ function renderResults(r){
     '<div class="stat"><span>Frame ID width</span><strong>' + frac(r.idW, +$('prec').value) + '</strong><em>' + dec(r.idW) + ' in.</em></div>';
 
   $('depthBox').innerHTML =
-    '<span>Min depth</span><strong>' + frac(r.minDepth, +$('prec').value, true) + '</strong><em>' + dec(r.minDepth) + ' in. (rounded up)</em>';
+    '<span>Required</span><strong>' + frac(r.minDepth, +$('prec').value, true) + '</strong><em>' + dec(r.minDepth) + ' in. (rounded up)</em>';
   const rows = r.layers.filter(l => l.t > 0).map(l => '<tr><td>' + esc(l.name) + '</td><td>' + dec(l.t) + '</td></tr>').join('');
-  $('depthTbl').innerHTML = rows + '<tr class="total"><td>Total</td><td>' + dec(r.minDepth) + '</td></tr>';
+  let extra = '';
+  if (ok(r.rabbet)){
+    const spare = r.rabbet - r.minDepth;
+    extra = '<tr><td>Rabbet</td><td>' + dec(r.rabbet) + '</td></tr>' +
+            '<tr><td>' + (spare < -1e-9 ? 'Short by' : 'Spare') + '</td><td style="color:' + (spare < -1e-9 ? 'var(--bad)' : 'var(--ok)') + '">' + dec(Math.abs(spare)) + '</td></tr>' +
+            '<tr><td>Moulding depth</td><td>' + dec(r.lipT + r.rabbet) + '</td></tr>';
+  }
+  $('depthTbl').innerHTML = rows + '<tr class="total"><td>Required</td><td>' + dec(r.minDepth) + '</td></tr>' + extra;
 
   const n = [];
   const add = (cls, msg) => n.push('<li class="' + cls + '">' + msg + '</li>');
@@ -533,7 +541,7 @@ function drawProfile(r){
   const bodyDepth = Math.max(R, r.minDepth, 0.25);
   const total = lipT + bodyDepth;
   const S = Math.min(170, 210 / total);
-  const x0 = 70, y0 = 66;
+  const x0 = 100, y0 = 66;
   const sliceW = 210;
   const sx = x0 + xr * S;                    // rabbet wall
   const sx2 = sx + (r.clr / 2) * S;          // OD edge: stack starts here (ID = OD + clearance)
@@ -593,7 +601,7 @@ function drawProfile(r){
   g += '<text x="' + x0 + '" y="' + (y0 + total*S + 66) + '" font-size="12" fill="#6b665d">Clearance ' + frac(r.clr / 2, 32) + ' per side (ID = OD + ' + frac(r.clr, 32) + '). Lip ' + frac(lip, +$('prec').value) + ' over the OD.</text>';
   // depth bracket (min depth) on the left of the stack, inside moulding wall edge
   const bx = ex + 12 + 0, by1 = y0 + lipT*S, by2 = Math.max(y, by1 + 4);
-  g += '<text x="' + x0 + '" y="' + (y0 + total*S + 34) + '" font-size="13" font-weight="600" fill="#1c1b1a">Min depth ' + dec(r.minDepth) + '" (' + frac(r.minDepth, +$('prec').value, true) + ')</text>';
+  g += '<text x="' + x0 + '" y="' + (y0 + total*S + 34) + '" font-size="13" font-weight="600" fill="#1c1b1a">Required rabbet depth ' + dec(r.minDepth) + '" (' + frac(r.minDepth, +$('prec').value, true) + ')</text>';
   if (ok(r.rabbet)){
     const okd = r.rabbet + 1e-9 >= r.minDepth;
     g += '<text x="' + x0 + '" y="' + (y0 + total*S + 50) + '" font-size="12" fill="' + (okd ? '#25623a' : '#a3141f') + '">Moulding rabbet ' + dec(r.rabbet) + '" ' + (okd ? 'fits' : 'is too shallow') + '</text>';
@@ -626,9 +634,10 @@ function drawProfile(r){
   // min depth of the stack and, if entered, the moulding rabbet depth
   if (ok(r.rabbet)){
     g += vdim(x0 - 12, yTop, yTop + R*S, 'rabbet ' + frac(R, fs));
-    g += vdim(x0 - 36, yTop, yTop + r.minDepth*S, 'min ' + frac(r.minDepth, fs, true));
+    g += vdim(x0 - 36, yTop, yTop + r.minDepth*S, 'need ' + frac(r.minDepth, fs, true));
+    g += vdim(x0 - 62, y0, yTop + R*S, 'moulding ' + frac(lipT + R, fs));
   } else {
-    g += vdim(x0 - 12, yTop, yTop + r.minDepth*S, 'min depth ' + frac(r.minDepth, fs, true));
+    g += vdim(x0 - 12, yTop, yTop + r.minDepth*S, 'need ' + frac(r.minDepth, fs, true));
   }
   // ID/OD edge marker
   g += '<line x1="' + sx + '" y1="' + (y0 + lipT*S) + '" x2="' + sx + '" y2="' + (y0 + (lipT+R)*S) + '" stroke="#1c1b1a" stroke-width="1"/>';
@@ -714,7 +723,8 @@ function summary(r){
   L.push('Frame ID: ' + dec(r.idH) + ' H x ' + dec(r.idW) + ' W  (' + frac(r.idH,p) + ' x ' + frac(r.idW,p) + ')');
   L.push('Glazing: ' + r.glaze + (r.glazeT ? ' ' + dec(r.glazeT) : '') + '   Spacers: ' + (r.spacer ? dec(r.spacerT) : 'no') + '   Strainer: ' + (r.strainer ? dec(r.strainerT) : 'no'));
   L.push('Mat: ' + ($('matType').value.trim() || '-') + '   Backer: ' + ($('backType').value.trim() || '-'));
-  L.push('Min frame depth: ' + dec(r.minDepth) + ' (' + frac(r.minDepth,p,true) + ')');
+  L.push('Required rabbet depth: ' + dec(r.minDepth) + ' (' + frac(r.minDepth,p,true) + ')');
+  if (ok(r.rabbet)) L.push('Moulding rabbet: ' + dec(r.rabbet) + '   Lip thickness: ' + dec(r.lipT) + '   Moulding depth: ' + dec(r.lipT + r.rabbet));
   L.push('Material: ' + ($('material').value.trim() || '-') + '   Finish: ' + ($('finish').value.trim() || '-'));
   return L.join('\n');
 }
