@@ -249,9 +249,10 @@
       <label class="f">Material<input type="text" class="txt" id="material" placeholder="maple"></label>
       <label class="f">Finish<input type="text" class="txt" id="finish" placeholder="satin black"></label>
     </div>
-    <div class="row r2">
-      <label class="f">Moulding rabbet depth (optional)<input type="text" id="rabbet" inputmode="decimal" placeholder="checks against min depth"></label>
-      <label class="f">Face width (drawing only)<input type="text" id="face" inputmode="decimal" value="1.25"></label>
+    <div class="row r3">
+      <label class="f">Rabbet depth (optional)<input type="text" id="rabbet" inputmode="decimal" placeholder="checks vs min depth"></label>
+      <label class="f">Face width (drawing)<input type="text" id="face" inputmode="decimal" value="1.25"></label>
+      <label class="f">Lip thickness, front to back<input type="text" id="lipT" inputmode="decimal" value="0.1875"></label>
     </div>
   </section>
 </div>
@@ -415,7 +416,7 @@ function read(){
   applyRecs();
   const mount = radio('mount');
   const g = {};
-  const ids = ['artH','artW','artD','vaH','vaW','revUp','revDown','revLeft','revRight','lip','glazeT','spacerT','matT','backT','strainerT','rabbet','face'];
+  const ids = ['artH','artW','artD','vaH','vaW','revUp','revDown','revLeft','revRight','lip','glazeT','spacerT','matT','backT','strainerT','rabbet','face','lipT'];
   const bad = [];
   ids.forEach(id => {
     const v = parseIn($(id).value);
@@ -460,6 +461,7 @@ function read(){
   r.minDepth = r.layers.reduce((a,l) => a + l.t, 0);
   r.rabbet = g.rabbet;
   r.face = ok(g.face) ? g.face : 1.25;
+  r.lipT = ok(g.lipT) && g.lipT > 0 ? g.lipT : 0.1875;
   return r;
 }
 
@@ -526,7 +528,7 @@ function renderResults(r){
 const FILL = {glaze:'#cfe6f2', spacer:'#d7b98a', mat:'#f6efdc', art:'#b23a48', back:'#a9a69f', strainer:'#8b6b45'};
 
 function drawProfile(r){
-  const lip = r.lip, F = Math.max(r.face, lip + 0.125), xr = F - lip, lipT = 0.1875;
+  const lip = r.lip, F = Math.max(r.face, lip + 0.125), xr = F - lip, lipT = r.lipT;
   const R = ok(r.rabbet) ? r.rabbet : Math.max(r.minDepth, 0.25);
   const bodyDepth = Math.max(R, r.minDepth, 0.25);
   const total = lipT + bodyDepth;
@@ -616,6 +618,11 @@ function drawProfile(r){
   g += '<line x1="' + x0 + '" y1="' + (y0-34) + '" x2="' + x0 + '" y2="' + y0 + '" stroke="' + DC + '" stroke-width=".8" stroke-dasharray="2 2"/>' +
        '<line x1="' + (x0+F*S) + '" y1="' + (y0-40) + '" x2="' + (x0+F*S) + '" y2="' + (y0-14) + '" stroke="' + DC + '" stroke-width=".8" stroke-dasharray="2 2"/>';
   g += hdim(x0, x0 + F*S, y0 - 34, 'face ' + frac(F, fs));
+  // lip thickness (front to back), right of the lip
+  g += '<line x1="' + (x0+F*S+10) + '" y1="' + y0 + '" x2="' + (x0+F*S+10) + '" y2="' + yTop + '" stroke="' + DC + '" stroke-width="1.3"/>' +
+       '<line x1="' + (x0+F*S+6) + '" y1="' + y0 + '" x2="' + (x0+F*S+14) + '" y2="' + y0 + '" stroke="' + DC + '"/>' +
+       '<line x1="' + (x0+F*S+6) + '" y1="' + yTop + '" x2="' + (x0+F*S+14) + '" y2="' + yTop + '" stroke="' + DC + '"/>' +
+       '<text x="' + (x0+F*S+19) + '" y="' + ((y0+yTop)/2 + 4) + '" font-size="12" font-weight="600" fill="' + DC + '">lip ' + frac(lipT, fs) + ' thick</text>';
   // min depth of the stack and, if entered, the moulding rabbet depth
   if (ok(r.rabbet)){
     g += vdim(x0 - 12, yTop, yTop + R*S, 'rabbet ' + frac(R, fs));
@@ -686,7 +693,7 @@ function renderSpecs(r){
     ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(x => ok(x) ? dec(x) : '\u2014').join(' / ') + ' in.'],
     ['Glazing', r.glaze === 'none' ? 'None' : (r.glaze === 'glass' ? 'Glass ' : 'Plexi ') + d3(r.glazeT), 'Spacers', r.spacer ? d3(r.spacerT) : 'No'],
     ['Mat', r.mount === 'matted' ? v('matType') + ' ' + d3(r.matT) : 'n/a', 'Backer', v('backType') + ' ' + d3(r.backT)],
-    ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip', d3(r.clr) + ' / ' + d3(r.lip)],
+    ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip over OD / lip thick', d3(r.clr) + ' / ' + d3(r.lip) + ' / ' + d3(r.lipT)],
     ['Moulding material', v('material'), 'Finish', v('finish')]
   ];
   $('specs').innerHTML = rows.map(c => '<tr>' + c.map(x => '<td>' + esc(x) + '</td>').join('') + '</tr>').join('');
@@ -765,7 +772,7 @@ $('copyBtn').onclick = async () => {
 };
 $('resetBtn').onclick = () => {
   document.querySelectorAll('input[type=text]').forEach(el => el.value = '');
-  $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25;
+  $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25; $('lipT').value = 0.1875;
   $('m1').checked = $('g1').checked = $('s1').checked = $('t1').checked = true;
   $('clr').value = '0.0625'; $('prec').value = '32'; $('glazeT').value = GLAZE.plexi;
   $('recMat').checked = $('recFace').checked = false;
