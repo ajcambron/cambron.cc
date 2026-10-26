@@ -68,11 +68,44 @@
   svg text{font-family:var(--body)}
   .cap{font-size:12px;color:var(--muted);margin:6px 0 0}
   .titleblock{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:8px}
+  .printonly{display:none}
+  .rgrid{display:block}
+  #specs td{border-bottom:1px dotted var(--line);padding:3px 4px}
+  #specs td:nth-child(odd){color:var(--muted);font-weight:600;white-space:nowrap;width:1%}
+  #specs td:nth-child(even){text-align:left}
   @media print{
-    @page{size:letter;margin:.5in}
-    body{background:#fff}.noprint,.toolbar{display:none!important}
-    main{grid-template-columns:1fr 1fr;gap:12px;padding:0}.sticky{position:static}
-    section.card{break-inside:avoid;border-color:#999}
+    @page{size:letter;margin:.4in}
+    html,body{background:#fff}
+    body{font-size:10.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .noprint,.toolbar,.inputs,.cap,.titleblock{display:none!important}
+    header{padding:0 0 6px;max-width:none;display:block}
+    h1{font-size:20px}
+    h1::after{content:attr(data-date);float:right;font:500 11px var(--body);color:var(--muted);margin-top:8px}
+    main{display:block;padding:0;max-width:none}
+    .printonly{display:block}
+    .sticky{position:static;display:grid;grid-template-columns:1fr 1fr;gap:8px;
+      grid-template-areas:"specs specs" "checks front" "results results" "profile profile"}
+    #specsCard{grid-area:specs}
+    #checksCard{grid-area:checks}
+    #frontCard{grid-area:front}
+    #resultsCard{grid-area:results}
+    #profileCard{grid-area:profile}
+    section.card{margin:0;padding:7px 10px;border:1px solid #999;border-radius:4px;break-inside:avoid}
+    h2{font-size:14px;margin:0 0 5px}
+    h3{margin:0 0 3px;font-size:10px}
+    #specs{font:500 11px var(--body)}
+    .rgrid{display:grid;grid-template-columns:1.35fr 1fr 1.15fr;gap:12px}
+    .math{font-size:10.5px;gap:2px 8px}
+    .stat span{font-size:9px;letter-spacing:.04em}
+    .stat{padding:5px 8px}
+    .stat strong{font-size:17px}
+    .stat em{font-size:10px}
+    table{font-size:11px}
+    .notes li{padding:4px 7px;font-size:10.5px}
+    svg{border:0;background:#fff}
+    #front svg{max-height:2.1in}
+    #profile svg{max-height:2.3in}
+    #checksCard{align-self:stretch}
   }
 </style>
 </head>
@@ -87,7 +120,7 @@
 </header>
 
 <main>
-<div>
+<div class="inputs">
   <section class="card">
     <h2>Artwork</h2>
     <div class="row r2">
@@ -224,27 +257,46 @@
 </div>
 
 <div class="sticky">
-  <section class="card">
+  <section class="card printonly" id="specsCard">
+    <h2>Worksheet</h2>
+    <table id="specs"></table>
+  </section>
+
+  <section class="card" id="resultsCard">
     <h2>Results</h2>
     <div class="titleblock"><span id="tbTitle"></span><span id="tbArtist"></span></div>
-    <h3 style="margin-top:0">Outside dimension (OD)</h3>
-    <p class="math" id="math"></p>
-    <h3>Frame ID</h3>
-    <div class="big" id="idBox"></div>
-    <h3>Min frame depth</h3>
-    <div class="big" style="grid-template-columns:1fr 1.4fr;align-items:start">
-      <div class="stat" id="depthBox"></div>
-      <table id="depthTbl"></table>
+    <div class="rgrid">
+      <div>
+        <h3 style="margin-top:0">Outside dimension (OD)</h3>
+        <p class="math" id="math"></p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Frame ID</h3>
+        <div class="big" id="idBox"></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Min frame depth</h3>
+        <div class="big" style="grid-template-columns:1fr 1.4fr;align-items:start">
+          <div class="stat" id="depthBox"></div>
+          <table id="depthTbl"></table>
+        </div>
+      </div>
     </div>
-    <h3>Checks</h3>
+  </section>
+
+  <section class="card" id="checksCard">
+    <h2>Checks</h2>
     <ul class="notes" id="notes"></ul>
   </section>
 
-  <section class="card">
+  <section class="card" id="profileCard">
     <h2>Frame profile</h2>
     <div id="profile"></div>
     <p class="cap">Cross-section, front of frame at top. Depths are to scale. Moulding shape is generic.</p>
-    <h3>Front view</h3>
+  </section>
+
+  <section class="card" id="frontCard">
+    <h2>Front view</h2>
     <div id="front"></div>
     <p class="cap">To scale. Red is the visible art, cream is mat or exposed backer, brown is the frame face.</p>
   </section>
@@ -596,6 +648,26 @@ function drawFront(r){
   $('front').innerHTML = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Front view of the frame">' + g + '</svg>';
 }
 
+
+/* ---------- printed worksheet table ---------- */
+function renderSpecs(r){
+  const lab = {matted:'Matted', float:'Float mount', flush:'Flush mount'}[r.mount];
+  const v = id => $(id).value.trim() || '\u2014';
+  const d3 = x => ok(x) ? dec(x) + '"' : '\u2014';
+  const rows = [
+    ['Art title', v('title'), 'Artist', v('artist')],
+    ['Art size H \u00d7 W \u00d7 D', d3(r.artH) + ' \u00d7 ' + d3(r.artW) + ' \u00d7 ' + d3(r.artD), 'Visible area H \u00d7 W', d3(r.vaH) + ' \u00d7 ' + d3(r.vaW)],
+    ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(x => ok(x) ? dec(x) : '\u2014').join(' / ') + ' in.'],
+    ['Glazing', r.glaze === 'none' ? 'None' : (r.glaze === 'glass' ? 'Glass ' : 'Plexi ') + d3(r.glazeT), 'Spacers', r.spacer ? d3(r.spacerT) : 'No'],
+    ['Mat', r.mount === 'matted' ? v('matType') + ' ' + d3(r.matT) : 'n/a', 'Backer', v('backType') + ' ' + d3(r.backT)],
+    ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip', d3(r.clr) + ' / ' + d3(r.lip)],
+    ['Moulding material', v('material'), 'Finish', v('finish')]
+  ];
+  $('specs').innerHTML = rows.map(c => '<tr>' + c.map(x => '<td>' + esc(x) + '</td>').join('') + '</tr>').join('');
+  const h1 = document.querySelector('h1');
+  h1.dataset.date = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+}
+
 /* ---------- summary ---------- */
 function summary(r){
   const p = +$('prec').value;
@@ -638,6 +710,7 @@ function render(){
   renderResults(last);
   drawProfile(last);
   drawFront(last);
+  renderSpecs(last);
 }
 document.querySelectorAll('input[type=text], select').forEach(el => el.addEventListener('input', render));
 document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(el => el.addEventListener('change', render));
