@@ -531,11 +531,12 @@ function drawProfile(r){
   const bodyDepth = Math.max(R, r.minDepth, 0.25);
   const total = lipT + bodyDepth;
   const S = Math.min(170, 210 / total);
-  const x0 = 24, y0 = 44;
+  const x0 = 70, y0 = 66;
   const sliceW = 210;
-  const sx = x0 + xr * S;                    // stack start (rabbet wall)
-  const ex = sx + sliceW;                    // stack end
-  const W = ex + 220, H = y0 + total * S + 56;
+  const sx = x0 + xr * S;                    // rabbet wall
+  const sx2 = sx + (r.clr / 2) * S;          // OD edge: stack starts here (ID = OD + clearance)
+  const ex = sx2 + sliceW;                   // stack end
+  const W = ex + 220, H = y0 + total * S + 78;
   let g = '';
 
   // moulding
@@ -552,14 +553,14 @@ function drawProfile(r){
     if (!(l.t > 0)) return;
     const h = Math.max(l.t * S, 2.5);
     if (l.key === 'spacer'){
-      g += '<rect x="' + sx + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="none" stroke="#9a958a" stroke-dasharray="3 3"/>';
-      g += '<rect x="' + sx + '" y="' + y + '" width="' + (0.3*S) + '" height="' + h + '" fill="' + FILL.spacer + '" stroke="#6e4a22" stroke-width="1"/>';
+      g += '<rect x="' + sx2 + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="none" stroke="#9a958a" stroke-dasharray="3 3"/>';
+      g += '<rect x="' + sx2 + '" y="' + y + '" width="' + (0.3*S) + '" height="' + h + '" fill="' + FILL.spacer + '" stroke="#6e4a22" stroke-width="1"/>';
     } else if (l.key === 'strainer'){
-      g += '<rect x="' + sx + '" y="' + y + '" width="' + (0.75*S) + '" height="' + h + '" fill="' + FILL.strainer + '" stroke="#4a3320" stroke-width="1"/>';
+      g += '<rect x="' + sx2 + '" y="' + y + '" width="' + (0.75*S) + '" height="' + h + '" fill="' + FILL.strainer + '" stroke="#4a3320" stroke-width="1"/>';
     } else {
-      g += '<rect x="' + sx + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="' + FILL[l.key] + '" stroke="#444" stroke-width="1"' + (l.key === 'glaze' ? ' fill-opacity=".8"' : '') + '/>';
+      g += '<rect x="' + sx2 + '" y="' + y + '" width="' + sliceW + '" height="' + h + '" fill="' + FILL[l.key] + '" stroke="#444" stroke-width="1"' + (l.key === 'glaze' ? ' fill-opacity=".8"' : '') + '/>';
     }
-    labels.push({y: y + h/2, name: l.name, t: l.t, edge: l.key === 'spacer' ? sx + 0.3*S : l.key === 'strainer' ? sx + 0.75*S : ex});
+    labels.push({y: y + h/2, name: l.name, t: l.t, edge: l.key === 'spacer' ? sx2 + 0.3*S : l.key === 'strainer' ? sx2 + 0.75*S : ex});
     y += h;
   });
 
@@ -587,6 +588,7 @@ function drawProfile(r){
        '<line x1="' + sx + '" y1="' + ly + '" x2="' + (x0+F*S) + '" y2="' + ly + '" stroke="#8a1f2b" stroke-width="1.5"/>';
   g += '<text x="' + (x0 + F*S + 8) + '" y="' + (ly + 4) + '" font-size="12" fill="#8a1f2b">lip ' + dec(lip) + '" over OD</text>';
 
+  g += '<text x="' + x0 + '" y="' + (y0 + total*S + 66) + '" font-size="12" fill="#6b665d">Clearance ' + frac(r.clr / 2, 32) + ' per side (ID = OD + ' + frac(r.clr, 32) + '). Lip ' + frac(lip, +$('prec').value) + ' over the OD.</text>';
   // depth bracket (min depth) on the left of the stack, inside moulding wall edge
   const bx = ex + 12 + 0, by1 = y0 + lipT*S, by2 = Math.max(y, by1 + 4);
   g += '<text x="' + x0 + '" y="' + (y0 + total*S + 34) + '" font-size="13" font-weight="600" fill="#1c1b1a">Min depth ' + dec(r.minDepth) + '" (' + frac(r.minDepth, +$('prec').value, true) + ')</text>';
@@ -596,6 +598,30 @@ function drawProfile(r){
     if (!okd){
       g += '<line x1="' + (x0 - 6) + '" y1="' + (y0 + (lipT + R)*S) + '" x2="' + (ex + 14) + '" y2="' + (y0 + (lipT + R)*S) + '" stroke="#a3141f" stroke-dasharray="5 3" stroke-width="1.5"/>';
     }
+  }
+  // dimension helpers
+  const DC = '#8a1f2b', fs = +$('prec').value;
+  const hdim = (xa, xb, yy, label, anchor) =>
+    '<line x1="' + xa + '" y1="' + yy + '" x2="' + xb + '" y2="' + yy + '" stroke="' + DC + '" stroke-width="1.3"/>' +
+    '<line x1="' + xa + '" y1="' + (yy-4) + '" x2="' + xa + '" y2="' + (yy+4) + '" stroke="' + DC + '"/>' +
+    '<line x1="' + xb + '" y1="' + (yy-4) + '" x2="' + xb + '" y2="' + (yy+4) + '" stroke="' + DC + '"/>' +
+    '<text x="' + ((xa + xb) / 2) + '" y="' + (yy - 6) + '" font-size="12" font-weight="600" fill="' + DC + '" text-anchor="middle">' + label + '</text>';
+  const vdim = (xx, ya, yb, label) =>
+    '<line x1="' + xx + '" y1="' + ya + '" x2="' + xx + '" y2="' + yb + '" stroke="' + DC + '" stroke-width="1.3"/>' +
+    '<line x1="' + (xx-4) + '" y1="' + ya + '" x2="' + (xx+4) + '" y2="' + ya + '" stroke="' + DC + '"/>' +
+    '<line x1="' + (xx-4) + '" y1="' + yb + '" x2="' + (xx+4) + '" y2="' + yb + '" stroke="' + DC + '"/>' +
+    '<text transform="translate(' + (xx - 7) + ',' + ((ya + yb) / 2) + ') rotate(-90)" font-size="12" font-weight="600" fill="' + DC + '" text-anchor="middle">' + label + '</text>';
+  const yTop = y0 + lipT*S;
+  // face width across the top of the moulding
+  g += '<line x1="' + x0 + '" y1="' + (y0-34) + '" x2="' + x0 + '" y2="' + y0 + '" stroke="' + DC + '" stroke-width=".8" stroke-dasharray="2 2"/>' +
+       '<line x1="' + (x0+F*S) + '" y1="' + (y0-40) + '" x2="' + (x0+F*S) + '" y2="' + (y0-14) + '" stroke="' + DC + '" stroke-width=".8" stroke-dasharray="2 2"/>';
+  g += hdim(x0, x0 + F*S, y0 - 34, 'face ' + frac(F, fs));
+  // min depth of the stack and, if entered, the moulding rabbet depth
+  if (ok(r.rabbet)){
+    g += vdim(x0 - 12, yTop, yTop + R*S, 'rabbet ' + frac(R, fs));
+    g += vdim(x0 - 36, yTop, yTop + r.minDepth*S, 'min ' + frac(r.minDepth, fs, true));
+  } else {
+    g += vdim(x0 - 12, yTop, yTop + r.minDepth*S, 'min depth ' + frac(r.minDepth, fs, true));
   }
   // ID/OD edge marker
   g += '<line x1="' + sx + '" y1="' + (y0 + lipT*S) + '" x2="' + sx + '" y2="' + (y0 + (lipT+R)*S) + '" stroke="#1c1b1a" stroke-width="1"/>';
