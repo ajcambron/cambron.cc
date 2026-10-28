@@ -134,7 +134,7 @@
       <label class="f">Art depth (D)<input type="text" id="artD" inputmode="decimal" placeholder='0.01'></label>
     </div>
     <p class="hint">Inches. Decimals or fractions: 8.5, 8 1/2, 8-1/2, 3/16.</p>
-    <h3>Visible area (VA)</h3>
+    <h3>Visible area (Window) (VA)</h3>
     <div class="row r2">
       <label class="f">VA height<input type="text" id="vaH" inputmode="decimal"></label>
       <label class="f">VA width<input type="text" id="vaW" inputmode="decimal"></label>
@@ -520,7 +520,7 @@ function renderResults(r){
       if (r.odH + 1e-9 < r.artH || r.odW + 1e-9 < r.artW)
         add('bad', 'Mat OD (' + dec(r.odH) + ' × ' + dec(r.odW) + ') is smaller than the art (' + dec(r.artH) + ' × ' + dec(r.artW) + '). The art would stick out past the mat.');
       if (r.vaH > r.artH + 1e-9 || r.vaW > r.artW + 1e-9)
-        add('bad', 'Visible area is larger than the art. The mat window would show past the art.');
+        add('bad', 'Visible area (Window) is larger than the art. The mat window would show past the art.');
       else if (r.artH - r.vaH < 0.25 - 1e-9 || r.artW - r.vaW < 0.25 - 1e-9)
         add('warn', 'The mat window overlaps the art by under 1/8 in. per side. That leaves little to hinge or tape to.');
     }
@@ -711,7 +711,7 @@ function renderSpecs(r){
   const d3 = x => ok(x) ? dec(x) + '"' : '\u2014';
   const rows = [
     ['Art title', v('title'), 'Artist', v('artist')],
-    ['Art size H \u00d7 W \u00d7 D', d3(r.artH) + ' \u00d7 ' + d3(r.artW) + ' \u00d7 ' + d3(r.artD), 'Visible area H \u00d7 W', d3(r.vaH) + ' \u00d7 ' + d3(r.vaW)],
+    ['Art size H \u00d7 W \u00d7 D', d3(r.artH) + ' \u00d7 ' + d3(r.artW) + ' \u00d7 ' + d3(r.artD), 'Visible area (Window) H \u00d7 W', d3(r.vaH) + ' \u00d7 ' + d3(r.vaW)],
     ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(x => ok(x) ? dec(x) : '\u2014').join(' / ') + ' in.'],
     ['Glazing', r.glaze === 'none' ? 'None' : (r.glaze === 'glass' ? 'Glass ' : 'Plexi ') + d3(r.glazeT), 'Spacers', r.spacer ? d3(r.spacerT) : 'No'],
     ['Mat', r.mount === 'matted' ? v('matType') + ' ' + d3(r.matT) : 'n/a', 'Backer', v('backType') + ' ' + d3(r.backT)],
@@ -730,7 +730,7 @@ function summary(r){
   L.push('AlmFab Picture Frame Worksheet');
   if ($('title').value.trim()) L.push('Art: ' + $('title').value.trim() + ($('artist').value.trim() ? ' by ' + $('artist').value.trim() : ''));
   L.push('Art size: ' + dec(r.artH) + ' H x ' + dec(r.artW) + ' W x ' + dec(r.artD) + ' D');
-  L.push('Mount: ' + r.mount + '   VA: ' + dec(r.vaH) + ' H x ' + dec(r.vaW) + ' W');
+  L.push('Mount: ' + r.mount + '   Visible area (Window): ' + dec(r.vaH) + ' H x ' + dec(r.vaW) + ' W');
   if (r.mount !== 'flush') L.push('Reveal: up ' + dec(r.up) + ', down ' + dec(r.down) + ', left ' + dec(r.left) + ', right ' + dec(r.right));
   L.push('OD: ' + dec(r.odH) + ' H x ' + dec(r.odW) + ' W  (' + frac(r.odH,p) + ' x ' + frac(r.odW,p) + ')');
   L.push('Frame ID: ' + dec(r.idH) + ' H x ' + dec(r.idW) + ' W  (' + frac(r.idH,p) + ' x ' + frac(r.idW,p) + ')');
