@@ -105,7 +105,7 @@
     .notes li{padding:4px 7px;font-size:10.5px}
     svg{border:0;background:#fff}
     #front svg{max-height:2.1in}
-    #profile svg{max-height:2.2in}
+    #profile svg{max-height:2in}
     #checksCard{align-self:stretch}
   }
 </style>
@@ -686,7 +686,7 @@ function renderResults(r){
     else add('ok', 'Moulding rabbet clears the stack with ' + dec(r.rabbet - r.minDepth) + ' in. to spare.');
   }
   if (r.strainer && r.strainerT === 0) add('info', 'Strainer is set to Yes with no size.');
-  if (r.cons && r.cons.ok){ r.cons.warns.forEach(t => add('warn', esc(t))); r.cons.notes.forEach(t => add('info', esc(t))); }
+  if (r.cons && r.cons.ok){ r.cons.warns.forEach(t => add('warn', esc(t))); r.cons.notes.forEach((t, i) => add(i === 0 ? 'info noprint' : 'info', esc(t))); }
   recNotes.forEach(t => add('info', esc(t)));
   $('notes').innerHTML = n.join('') || '<li class="info">No issues.</li>';
 }
