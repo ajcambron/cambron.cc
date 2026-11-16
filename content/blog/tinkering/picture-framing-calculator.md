@@ -23,7 +23,7 @@ Tick "Lock the glass / mat size" when the size is already decided, either a stoc
 * Window size can come from the art minus an overlap, from the visible area fields, or from a mat weight (narrow, standard, wide) set by the ratio.
 * Placement options are raised (top:bottom 1:R), strongly raised (1:R²), three sides even with the bottom taking the rest, centered, window centered on the ratio line, or manual.
 * R is the Golden Section by default. DIN paper (1:1.414) and Tatami (1:2) are there too.
-* Every reveal snaps to 1/16 in. and the bottom or right side takes the remainder, so the pieces always add up to the locked size.
+* Every reveal snaps to 1/16 in. by default (1/8 and 1/32 are in the Round to menu), and the bottom or right side takes the remainder, so the pieces always add up to the locked size.
 * If the window does not fit, or the art would stick out past the mat on one side, the Checks panel says so.
 
 ## A cutting sheet for the mat cutter

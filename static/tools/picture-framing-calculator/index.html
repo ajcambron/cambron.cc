@@ -223,7 +223,7 @@
     <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
     <label class="tick"><input type="checkbox" id="recFace"> Recommend frame face width from the ratio</label>
     <label class="tick"><input type="checkbox" id="recDepth"> Recommend moulding depth from the ratio</label>
-    <p class="hint">Ticked fields fill themselves and lock. Everything snaps to 1/16 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
+    <p class="hint" id="gridHint">Ticked fields fill themselves and lock. Everything snaps to 1/16 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
   </section>
 
   <section class="card">
@@ -259,6 +259,7 @@
         <select id="prec">
           <option value="8">1/8</option>
           <option value="16" selected>1/16</option>
+          <option value="32">1/32</option>
         </select></label>
     </div>
 
@@ -415,7 +416,8 @@ const RATIO = {
   tatami: {v:2, sym:'2'}
 };
 const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
-const GRID = 16;   // smallest increment: 1/16 in.
+let GRID = 16;   // smallest increment, set from the Round to menu (default 1/16 in.)
+const gridTxt = () => frac(1 / GRID, GRID).replace('"', '');
 const snapG = x => Math.max(1/GRID, Math.round(x * GRID) / GRID);
 const toStr = x => frac(x, GRID).replace('"', '');
 const stepK = (target, R) => Math.max(1, Math.round(-Math.log(target) / Math.log(R)));
@@ -558,8 +560,8 @@ function applyConstraints(){
 
   if (style === 'three' && down < up - 1e-9) warns.push('The bottom is lighter than the top. Use a taller glass or a smaller window if the bottom should be heavier.');
   if (style !== 'manual'){
-    if (Math.abs(left - right) > 1e-9) warns.push('Left and right differ by ' + fr(Math.abs(left - right)) + ' because the margin does not split evenly on the 1/16 in. grid.');
-    if (style === 'equal' && Math.abs(up - down) > 1e-9) warns.push('Top and bottom differ by ' + fr(Math.abs(up - down)) + ' because the margin does not split evenly on the 1/16 in. grid.');
+    if (Math.abs(left - right) > 1e-9) warns.push('Left and right differ by ' + fr(Math.abs(left - right)) + ' because the margin does not split evenly on the ' + gridTxt() + ' in. grid.');
+    if (style === 'equal' && Math.abs(up - down) > 1e-9) warns.push('Top and bottom differ by ' + fr(Math.abs(up - down)) + ' because the margin does not split evenly on the ' + gridTxt() + ' in. grid.');
   }
   const notes = [
     'Locked ' + fr(odH) + ' H × ' + fr(odW) + ' W' + (basis === 'id' ? ' (frame ID ' + fr(cH) + ' × ' + fr(cW) + ' less ' + fr(clr) + ' clearance)' : '') +
@@ -950,7 +952,7 @@ function cutDiagram(r){
 function renderCut(r){
   const el = $('cutBody');
   const have = [r.odH, r.odW, r.vaH, r.vaW, r.up, r.down, r.left, r.right].every(ok);
-  const d4 = x => x.toFixed(4);
+  const dp = GRID >= 64 ? 6 : GRID >= 32 ? 5 : 4, d4 = x => x.toFixed(dp);
   if (r.mount === 'flush'){ el.innerHTML = '<p class="hint">Flush mount: there is no mat to cut.</p>'; return; }
   if (!have){ el.innerHTML = '<p class="hint">Enter the art size and the reveals to fill in this sheet.</p>'; return; }
   const when = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
@@ -986,8 +988,8 @@ function renderCut(r){
     row('Layers', '1', '') + row('Template', 'Rectangle', '') +
     '</table>' +
     (sidesEq ? '' : '<p class="cut-warn"><b>Left and right borders differ.</b> The Single tab has one Side field for both. Do not enter one side value and cut. Ask the store how to cut an off-center window.</p>') +
-    (off.length ? '<p class="cut-warn"><b>Not on the 1/16 in. grid:</b> ' + off.join(', ') + '. The decimals for these are rounded, so they may not cut exactly. Adjust the art size or the window to a 1/16 in. increment.</p>' : '') +
-    '<p class="cut-foot">All sizes are inches' + (off.length ? '' : ', and every decimal is exact because each value is a multiple of 1/16') + '. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
+    (off.length ? '<p class="cut-warn"><b>Not on the ' + gridTxt() + ' in. grid:</b> ' + off.join(', ') + '. The decimals for these are rounded, so they may not cut exactly. Adjust the art size or the window to a ' + gridTxt() + ' in. increment.</p>' : '') +
+    '<p class="cut-foot">All sizes are inches' + (off.length ? '' : ', and every decimal is exact because each value is a multiple of ' + gridTxt()) + (GRID > 16 ? '. These decimals run to ' + dp + ' places; use the fractions if the cutter takes them' : '') + '. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
     '</div><div>' + cutDiagram(r) +
     '<p class="cut-foot">Arithmetic: top + opening + bottom = ' + d4(sumH) + (okH ? ' \u2713' : ' \u2717') + ' and side + opening + side = ' + d4(sumW) + (okW ? ' \u2713' : ' \u2717') + '. The frame lip covers ' + lip + ' of every border, already allowed for here. Do not trim to compensate.</p>' +
     '</div></div>' +
@@ -1029,6 +1031,8 @@ function summary(r){
 let last;
 function render(){
   const m = radio('mount');
+  GRID = +$('prec').value || 16;
+  $('gridHint').textContent = 'Ticked fields fill themselves and lock. Everything snaps to ' + gridTxt() + ' in. (change it with Round to, under Frame). Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.';
   const matted = m === 'matted', flush = m === 'flush';
   const lockOn = $('lockOD').checked && !flush;
   const src = $('winSrc').value;
