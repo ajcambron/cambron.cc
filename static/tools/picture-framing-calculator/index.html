@@ -197,6 +197,7 @@
     <h3>Recommendations</h3>
     <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
     <label class="tick"><input type="checkbox" id="recFace"> Recommend frame face width from the ratio</label>
+    <label class="tick"><input type="checkbox" id="recDepth"> Recommend moulding depth from the ratio</label>
     <p class="hint">Ticked fields fill themselves and lock. Everything snaps to 1/32 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
   </section>
 
@@ -599,6 +600,18 @@ function read(){
   r.rabbet = g.rabbet;
   r.face = ok(g.face) ? g.face : 1.25;
   r.lipT = ok(g.lipT) && g.lipT > 0 ? g.lipT : 0.1875;
+  if ($('recDepth').checked){
+    const Rr = RATIO[$('ratioSys').value].v, p = +$('prec').value;
+    const need = Math.ceil((r.minDepth + 1/16) * 32 - 1e-9) / 32;
+    const targetDepth = r.face / Rr;
+    const target = Math.round((targetDepth - r.lipT) * 32) / 32;
+    const rab = Math.max(need, target);
+    $('rabbet').value = fmtIn(rab); r.rabbet = rab;
+    recNotes.push('Recommended rabbet ' + frac(rab, 32) + ', moulding depth ' + frac(r.lipT + rab, 32) + ' (lip ' + frac(r.lipT, 32) + ' + rabbet). ' +
+      (target >= need - 1e-9
+        ? 'Ratio governs: face ' + frac(r.face, 32) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ' = ' + frac(targetDepth, 32) + ' of moulding depth.'
+        : 'The stack governs: the required ' + frac(Math.ceil(r.minDepth * 32 - 1e-9) / 32, 32) + ' plus 1/16 spare needs a ' + frac(need, 32) + ' rabbet, which makes the moulding ' + frac(r.lipT + need, 32) + ' deep, past the ratio target of ' + frac(targetDepth, 32) + ' (face ' + frac(r.face, 32) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ').'));
+  }
   return r;
 }
 
@@ -923,6 +936,7 @@ function render(){
       : flush ? 'Flush mounts have no mat, so there is no size to lock.'
       : 'Tick to fix the glass or mat size (a stock size, or the opening of a frame you already have). The window is then placed inside it by the ratio.'; }
   $('face').disabled = $('recFace').checked;
+  $('rabbet').disabled = $('recDepth').checked;
   $('matT').disabled = $('matType').disabled = !matted;
   $('glazeT').disabled = radio('glaze') === 'none';
   $('spacerT').disabled = radio('spacer') === 'no';
@@ -981,7 +995,7 @@ $('resetBtn').onclick = () => {
   $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25; $('lipT').value = 0.1875;
   $('m1').checked = $('g1').checked = $('s1').checked = $('t1').checked = true;
   $('clr').value = '0.0625'; $('prec').value = '32'; $('glazeT').value = GLAZE.plexi;
-  $('recMat').checked = $('recFace').checked = $('lockOD').checked = false;
+  $('recMat').checked = $('recFace').checked = $('recDepth').checked = $('lockOD').checked = false;
   $('overlap').value = 0.25; $('sizeBasis').value = 'od'; $('winSrc').value = 'art';
   $('ratioSys').value = 'golden'; $('matWeight').value = '0.24'; $('matStyle').value = 'raised';
   render();
