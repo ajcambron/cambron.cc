@@ -687,7 +687,7 @@ function renderResults(r){
   }
   if (r.strainer && r.strainerT === 0) add('info', 'Strainer is set to Yes with no size.');
   if (r.cons && r.cons.ok){ r.cons.warns.forEach(t => add('warn', esc(t))); r.cons.notes.forEach((t, i) => add(i === 0 ? 'info noprint' : 'info', esc(t))); }
-  recNotes.forEach(t => add('info', esc(t)));
+  recNotes.forEach(t => add('info noprint', esc(t)));
   $('notes').innerHTML = n.join('') || '<li class="info">No issues.</li>';
 }
 
