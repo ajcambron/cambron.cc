@@ -832,16 +832,17 @@ function drawFront(r){
     g += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">VA ' + dec(r.vaW) + ' × ' + dec(r.vaH) + '</text>';
   }
   // OD dimension lines
+  const odWho = {matted:'glass / mat', float:'glass / backer', flush:'glass / art'}[r.mount];
   const dy = oy + outerH*S + 14;
   g += '<line x1="' + odx + '" y1="' + dy + '" x2="' + (odx + r.odW*S) + '" y2="' + dy + '" stroke="#8a1f2b" stroke-width="1.2"/>' +
        '<line x1="' + odx + '" y1="' + (dy-4) + '" x2="' + odx + '" y2="' + (dy+4) + '" stroke="#8a1f2b"/>' +
        '<line x1="' + (odx + r.odW*S) + '" y1="' + (dy-4) + '" x2="' + (odx + r.odW*S) + '" y2="' + (dy+4) + '" stroke="#8a1f2b"/>' +
-       '<text x="' + (odx + r.odW*S/2) + '" y="' + (dy + 17) + '" text-anchor="middle" font-size="12" fill="#8a1f2b">OD W ' + dec(r.odW) + '"</text>';
+       '<text x="' + (odx + r.odW*S/2) + '" y="' + (dy + 17) + '" text-anchor="middle" font-size="12" fill="#8a1f2b">' + odWho + ' OD W ' + dec(r.odW) + '"</text>';
   const dx = ox + outerW*S + 14;
   g += '<line x1="' + dx + '" y1="' + ody + '" x2="' + dx + '" y2="' + (ody + r.odH*S) + '" stroke="#8a1f2b" stroke-width="1.2"/>' +
        '<line x1="' + (dx-4) + '" y1="' + ody + '" x2="' + (dx+4) + '" y2="' + ody + '" stroke="#8a1f2b"/>' +
        '<line x1="' + (dx-4) + '" y1="' + (ody + r.odH*S) + '" x2="' + (dx+4) + '" y2="' + (ody + r.odH*S) + '" stroke="#8a1f2b"/>' +
-       '<text transform="translate(' + (dx + 16) + ',' + (ody + r.odH*S/2) + ') rotate(90)" text-anchor="middle" font-size="12" fill="#8a1f2b">OD H ' + dec(r.odH) + '"</text>';
+       '<text transform="translate(' + (dx + 16) + ',' + (ody + r.odH*S/2) + ') rotate(90)" text-anchor="middle" font-size="12" fill="#8a1f2b">' + odWho + ' OD H ' + dec(r.odH) + '"</text>';
 
   $('front').innerHTML = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Front view of the frame">' + g + '</svg>';
 }
