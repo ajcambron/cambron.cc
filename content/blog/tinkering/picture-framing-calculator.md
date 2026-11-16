@@ -12,7 +12,7 @@ It is one HTML file with no network calls. Save it, open it offline, or put it o
 
 ## What it does
 * Works out the outside dimension (OD) for matted, float, and flush mounts from the visible area and the four reveals.
-* Adds clearance (1/16, 3/32, or 1/8 in.) to get the frame inside dimension (ID).
+* Adds clearance (1/16 or 1/8 in.) to get the frame inside dimension (ID).
 * Adds up glazing, spacers, mat, art, backer, and strainer to get the minimum frame depth, rounded up so the rabbet is never short.
 * Draws a cross-section of the frame profile, to scale in depth, and a front view, to scale.
 * Accepts decimals or fractions (8.5, 8 1/2, 3/16) and shows answers in fractions down to 1/16 in.
