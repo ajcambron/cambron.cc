@@ -69,21 +69,46 @@
   .cap{font-size:12px;color:var(--muted);margin:6px 0 0}
   .titleblock{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:8px}
   #cutCard{grid-column:1/-1}
-  .cut-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:-6px 0 10px}
-  .cut-grid{display:grid;gap:18px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
-  @media(max-width:760px){.cut-grid{grid-template-columns:1fr}}
-  .cut-tbl{width:100%;border-collapse:collapse}
-  .cut-tbl th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
-  .cut-tbl td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;font:700 13.5px var(--body)}
-  .cut-tbl td.n{font:600 20px var(--mono)}
-  .cut-tbl td.fr{font:500 14px var(--mono);color:var(--muted)}
-  .cut-tbl tr.calc td{background:#efe9d8}
-  .cut-tbl tr.bad td{background:#fdecec}
-  .cut-h{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
-  ol.cut-steps,ul.cut-list{margin:4px 0 0 20px;padding:0;font-size:13.5px}
-  ol.cut-steps li,ul.cut-list li{margin:3px 0}
-  .cut-warn{margin:8px 0 0;padding:8px 10px;border-left:4px solid var(--warn);background:#fbf0dc;font-size:13px;border-radius:0 6px 6px 0}
-  .cut-foot{font-size:11.5px;color:var(--muted);margin:12px 0 0}
+  .cl-build{display:grid;gap:18px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;margin-bottom:18px}
+  @media(max-width:760px){.cl-build{grid-template-columns:1fr}}
+  .cl-cur table{width:100%;border-collapse:collapse}
+  .cl-cur th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
+  .cl-cur td{padding:5px 6px;border-bottom:1px solid var(--line);font:700 13px var(--body)}
+  .cl-cur td.n{font:600 15px var(--mono)}
+  .cl-cur td.d{font:500 11px var(--mono);color:var(--muted)}
+  .cl-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+  .cl-add label{display:flex;flex-direction:column;font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);gap:3px}
+  .cl-add input{font:500 14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .cl-add .q{width:64px}.cl-add .l{width:170px}.cl-add .b{width:170px}
+  #addMsg{font-size:12.5px;color:var(--muted);margin:6px 0 0;min-height:1.2em}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .cl-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:8px}
+  .cl-head h3{margin:0;font:700 20px var(--body)}
+  .cl-head span{font-size:13px;color:var(--muted)}
+  .cl-meta{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px;margin-bottom:10px}
+  .cl-meta input,.cl-meta textarea{font:500 13.5px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;width:100%;box-sizing:border-box}
+  .cl-meta textarea{height:34px;resize:vertical}
+  .cl-wrap{overflow-x:auto}
+  table.cl{width:100%;border-collapse:collapse;min-width:760px}
+  table.cl th{font:600 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:5px 6px;border-bottom:2px solid var(--ink);white-space:nowrap}
+  table.cl td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.cl .ln{color:var(--muted);font:600 12px var(--mono)}
+  table.cl .f{display:block;font:700 15px var(--mono)}
+  table.cl .dd{display:block;font:500 10.5px var(--mono);color:var(--muted)}
+  table.cl .wh{white-space:nowrap}
+  table.cl td.qty{white-space:nowrap}
+  table.cl .qn{font:700 18px var(--mono)}
+  table.cl .sv input.t{font:500 13px var(--body);padding:4px 6px;border:1px solid var(--line);border-radius:5px;width:100%;box-sizing:border-box;min-width:90px}
+  table.cl .step{padding:2px 8px;font-size:14px;line-height:1}
+  table.cl .rm{background:transparent;color:var(--muted);border:0;font-size:18px;padding:0 6px}
+  table.cl tr.tot td{border-top:2px solid var(--ink);border-bottom:0;font:700 13px var(--body)}
+  table.cl .bk{font:600 12px var(--body);color:var(--muted)}
+  table.cl tr.flag td{background:#fbf0dc}
+  .cl-empty{padding:18px 4px;color:var(--muted);font-size:14px}
+  .cl-foot{font-size:11.5px;color:var(--muted);margin:10px 0 0}
+  .cl-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .cl-actions label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .pv{display:none}
   .printonly{display:none}
   .rgrid{display:block}
   #specs td{border-bottom:1px dotted var(--line);padding:3px 4px}
@@ -123,14 +148,24 @@
     #front svg{max-height:2.1in}
     #profile svg{max-height:2in}
     #checksCard{align-self:stretch}
-    #cutCard{break-before:page;grid-column:auto;padding:10px 12px}
-    #cutCard h2{font-size:20px}
-    .cut-grid{grid-template-columns:1.05fr 1fr;gap:14px}
-    .cut-tbl td{padding:5px 6px}
-    .cut-tbl td.n{font-size:19px}
-    ol.cut-steps,ul.cut-list{font-size:12px}
-    body.printcut header,body.printcut .inputs,body.printcut .sticky{display:none!important}
-    body.printcut #cutCard{break-before:auto}
+    #cutCard{display:none}
+    body.printcut{font-size:12px}
+    body.printcut header,body.printcut .inputs,body.printcut .sticky,body.printcut #cutCard>h2,body.printcut .cl-build,body.printcut .cl-actions{display:none!important}
+    body.printcut #cutCard{display:block;border:0;padding:0;grid-column:auto}
+    body.printcut .sv{display:none!important}
+    body.printcut .pv{display:inline;font:600 13px var(--body)}
+    body.printcut .cl-meta{display:block}
+    body.printcut .cl-meta input,body.printcut .cl-meta textarea{display:none}
+    body.printcut .cl-wrap{overflow:visible}
+    body.printcut table.cl{min-width:0;font-size:12px}
+    body.printcut table.cl th{font-size:10px;color:#000}
+    body.printcut table.cl tr{break-inside:avoid}
+    body.printcut table.cl .rmc,body.printcut table.cl .stepc{display:none}
+    body.printcut table.cl td{padding:6px 6px;border-bottom:1px solid #999}
+    body.printcut table.cl .f{font-size:15px}
+    body.printcut table.cl .dd{font-size:10px;color:#444}
+    body.printcut table.cl .qn{font-size:20px}
+    body.printcut table.cl tr.flag td{background:#eee}
   }
 </style>
 </head>
@@ -140,7 +175,7 @@
   <div class="toolbar noprint">
     <button id="copyBtn" class="ghost">Copy summary</button>
     <button id="printBtn">Print</button>
-    <button id="printCutBtn" class="ghost">Print cutting sheet</button>
+    <button id="printCutBtn" class="ghost" disabled>Print cut list</button>
     <button id="resetBtn" class="ghost">Reset</button>
   </div>
 </header>
@@ -361,8 +396,34 @@
 </div>
 
 <section class="card" id="cutCard">
-  <h2>Mat cutting order</h2>
-  <div id="cutBody"></div>
+  <h2>Cut list</h2>
+  <div class="cl-build noprint">
+    <div class="cl-cur"><div id="curMat"></div>
+      <div class="cl-add">
+        <label>Qty<input class="q" id="addQty" type="number" min="1" max="999" value="1"></label>
+        <label>Label<input class="l" id="addLabel" type="text" placeholder="Art title"></label>
+        <label>Board<input class="b" id="addBoard" type="text" placeholder="Mat type"></label>
+        <button id="addBtn">Add to cut list</button>
+      </div>
+      <p id="addMsg"></p>
+    </div>
+    <div id="curDiagram"></div>
+  </div>
+  <div id="listSheet">
+    <div class="cl-head"><h3>Mat cutting list</h3><span id="listInfo"></span></div>
+    <div class="cl-meta"><input id="listJob" type="text" placeholder="Job or customer"><textarea id="listNotes" placeholder="Notes for the cutter"></textarea></div>
+    <div class="pv" id="listMetaPv"></div>
+    <div class="cl-wrap"><div id="listBody"></div></div>
+    <p class="cl-foot" id="listFoot"></p>
+    <div class="cl-actions noprint">
+      <button id="clCopy" class="ghost">Copy as text</button>
+      <button id="clCsv" class="ghost">Download CSV</button>
+      <button id="clMail" class="ghost">Email list</button>
+      <button id="clPrint">Print cut list</button>
+      <label><input type="checkbox" id="clDec" checked> Show decimals</label>
+      <button id="clClear" class="ghost">Clear list</button>
+    </div>
+  </div>
 </section>
 </main>
 
@@ -949,62 +1010,162 @@ function cutDiagram(r){
   return '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Mat layout with border widths">' + g + '</svg>';
 }
 
+/* ---------- cut list ---------- */
+const CL_KEY = 'pfc.cutlist.v1';
+let CL = {items:[], meta:{job:'', notes:'', dec:true}};
+try { const j = JSON.parse(localStorage.getItem(CL_KEY) || 'null'); if (j && Array.isArray(j.items)) CL = {items:j.items, meta:Object.assign(CL.meta, j.meta || {})}; } catch(e){}
+function clSave(){ try { localStorage.setItem(CL_KEY, JSON.stringify(CL)); } catch(e){} }
+const R6 = x => Math.round(x * 1e6) / 1e6;
+// list values display on a fixed 1/64 basis so the Round to menu never alters stored data
+const onG = (x, g) => Math.abs(x * g - Math.round(x * g)) < 1e-9;
+const fxl = x => !ok(x) ? '—' : onG(x, 64) ? frac(x, 64) : R6(x).toFixed(4) + '"';
+const dl = x => { if (!ok(x)) return ''; let t = x.toFixed(6).replace(/0+$/, ''); const p = t.split('.')[1] || ''; return p.length >= 3 ? t : x.toFixed(3); };
+let clMsgT = 0;
+function flash(t){ $('addMsg').textContent = t; clearTimeout(clMsgT); clMsgT = setTimeout(() => renderCut(last), 2500); }
+
+function curState(r){
+  if (r.mount === 'flush') return {no:'Flush mount: no mat to cut.'};
+  const have = [r.odH, r.odW, r.up, r.down, r.left, r.right].every(ok) && (r.mount === 'float' || (ok(r.vaH) && ok(r.vaW)));
+  if (!have) return {no:'Enter the art size and the reveals to add a mat.'};
+  return {};
+}
+function curItem(r){
+  const t = $('addLabel').value.trim() || $('title').value.trim() || 'Untitled';
+  if (r.mount === 'float') return {kind:'backer', label:t, board:$('addBoard').value.trim() || 'Backer, no opening', vaW:null, vaH:null, up:null, down:null, left:null, right:null, odW:R6(r.odW), odH:R6(r.odH)};
+  return {kind:'mat', label:t, board:$('addBoard').value.trim() || $('matType').value.trim(), vaW:R6(r.vaW), vaH:R6(r.vaH), up:R6(r.up), down:R6(r.down), left:R6(r.left), right:R6(r.right), odW:R6(r.odW), odH:R6(r.odH)};
+}
 function renderCut(r){
-  const el = $('cutBody');
-  const have = [r.odH, r.odW, r.vaH, r.vaW, r.up, r.down, r.left, r.right].every(ok);
-  const dp = GRID >= 64 ? 6 : GRID >= 32 ? 5 : 4, d4 = x => x.toFixed(dp);
-  if (r.mount === 'flush'){ el.innerHTML = '<p class="hint">Flush mount: there is no mat to cut.</p>'; return; }
-  if (!have){ el.innerHTML = '<p class="hint">Enter the art size and the reveals to fill in this sheet.</p>'; return; }
-  const when = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
-  const title = $('title').value.trim(), artist = $('artist').value.trim();
-  const top = '<div class="cut-top"><span>' + esc(title || 'Untitled') + (artist ? ' \u2014 ' + esc(artist) : '') + '</span><span>' + when + ' \u00b7 Mats to cut: 1</span></div>';
-  if (r.mount === 'float'){
-    el.innerHTML = top + '<p>Float mount: no window is cut. Cut the backer to <b>' + d4(r.odW) + ' wide \u00d7 ' + d4(r.odH) + ' high</b> (' + fx(r.odW) + ' \u00d7 ' + fx(r.odH) + ').</p>';
-    return;
-  }
-  const row = (lab, val, f, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + lab + '</td><td class="n">' + val + '</td><td class="fr">' + (f || '') + '</td></tr>';
+  const st = curState(r);
+  $('addLabel').placeholder = $('title').value.trim() || 'Art title';
+  $('addBoard').placeholder = r.mount === 'float' ? 'Backer, no opening' : ($('matType').value.trim() || 'Mat type');
+  $('addBtn').disabled = !!st.no;
+  $('addBtn').textContent = r.mount === 'float' ? 'Add backer to list' : 'Add to cut list';
+  $('addMsg').textContent = st.no || '';
+  if (st.no){ $('curMat').innerHTML = '<p class="hint">' + esc(st.no) + '</p>'; $('curDiagram').innerHTML = ''; return; }
   const sidesEq = Math.abs(r.left - r.right) < 1e-9;
-  const sideRow = sidesEq
-    ? row('Borders \u00b7 Side', d4(r.left), fx(r.left))
-    : row('Borders \u00b7 Side', 'L ' + d4(r.left) + '<br>R ' + d4(r.right), 'L ' + fx(r.left) + '<br>R ' + fx(r.right), 'bad');
-  const sumH = r.up + r.vaH + r.down, sumW = r.left + r.vaW + r.right;
-  const okH = Math.abs(sumH - r.odH) < 1e-6, okW = Math.abs(sumW - r.odW) < 1e-6;
-  const lip = fx(r.lip);
-  const onGrid = x => Math.abs(x * GRID - Math.round(x * GRID)) < 1e-9;
-  const off = [['opening width', r.vaW], ['opening height', r.vaH], ['top', r.up], ['bottom', r.down], ['left', r.left], ['right', r.right], ['outside width', r.odW], ['outside height', r.odH]]
-    .filter(q => !onGrid(q[1])).map(q => q[0]);
-  const tb = r.down > r.up + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.down) + ') should be at the bottom.'
-    : r.up > r.down + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.up) + ') should be at the top.'
-    : 'The top and bottom borders are equal.';
-  el.innerHTML = top + '<div class="cut-grid"><div>' +
-    '<table class="cut-tbl"><tr><th>Field on screen</th><th>Type</th><th>Same, in fractions</th></tr>' +
-    row('Opening Size \u00b7 Width', d4(r.vaW), fx(r.vaW)) +
-    row('Opening Size \u00b7 Height', d4(r.vaH), fx(r.vaH)) +
-    row('Borders \u00b7 Top', d4(r.up), fx(r.up)) +
-    row('Borders \u00b7 Bottom', d4(r.down), fx(r.down)) +
-    sideRow +
-    row('Outside Size \u00b7 Width <small>(fills in; must match)</small>', d4(r.odW), fx(r.odW), 'calc') +
-    row('Outside Size \u00b7 Height <small>(fills in; must match)</small>', d4(r.odH), fx(r.odH), 'calc') +
-    row('Layers', '1', '') + row('Template', 'Rectangle', '') +
-    '</table>' +
-    (sidesEq ? '' : '<p class="cut-warn"><b>Left and right borders differ.</b> The Single tab has one Side field for both. Do not enter one side value and cut. Ask the store how to cut an off-center window.</p>') +
-    (off.length ? '<p class="cut-warn"><b>Not on the ' + gridTxt() + ' in. grid:</b> ' + off.join(', ') + '. The decimals for these are rounded, so they may not cut exactly. Adjust the art size or the window to a ' + gridTxt() + ' in. increment.</p>' : '') +
-    '<p class="cut-foot">All sizes are inches' + (off.length ? '' : ', and every decimal is exact because each value is a multiple of ' + gridTxt()) + (GRID > 16 ? '. These decimals run to ' + dp + ' places; use the fractions if the cutter takes them' : '') + '. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
-    '</div><div>' + cutDiagram(r) +
-    '<p class="cut-foot">Arithmetic: top + opening + bottom = ' + d4(sumH) + (okH ? ' \u2713' : ' \u2717') + ' and side + opening + side = ' + d4(sumW) + (okW ? ' \u2713' : ' \u2717') + '. The frame lip covers ' + lip + ' of every border, already allowed for here. Do not trim to compensate.</p>' +
-    '</div></div>' +
-    '<div class="cut-grid"><div><div class="cut-h">Setting up</div><ol class="cut-steps">' +
-    '<li>Main Screen, <b>Edit New Mat</b>, <b>Single</b> tab.</li>' +
-    '<li>Type the Opening Size, Borders and Layers from the table. Your screen may list the fields in a different order. Tab out of the last Borders field. Do not press Enter.</li>' +
-    '<li>Outside Size fills itself in. It must read <b>' + fx(r.odW) + ' \u00d7 ' + fx(r.odH) + '</b>. If not, a number was mistyped: clear it and retype. Never type into Outside Size, because it rewrites the borders.</li>' +
-    '<li>Click <b>Cut</b> to open the Cut Preview. ' + tb + (sidesEq ? ' The window should sit centered left to right.' : '') + ' The indicator should say a back cut, which is the usual setting.</li>' +
-    '</ol></div><div><div class="cut-h">Loading and cutting</div><ol class="cut-steps" start="5">' +
-    '<li>At least 2 layers of scrap matboard under the mat.</li>' +
-    '<li>Mat face down, seated snugly against the Horizontal Clamp and the Vertical Clamp.</li>' +
-    '<li>Click <b>Cut</b> and answer the prompts for the blade cartridge and blade depth as usual.</li>' +
-    '<li>Before the next mat, measure this one against the table: opening ' + fx(r.vaW) + ' \u00d7 ' + fx(r.vaH) + ', top ' + fx(r.up) + ', bottom ' + fx(r.down) + ', sides ' + (sidesEq ? fx(r.left) : fx(r.left) + ' and ' + fx(r.right)) + '. Each should be within 1/32 in. If one is off, stop and tell the store.</li>' +
-    '</ol></div></div>' +
-    '<p class="cut-foot">Common slips: width and height swapped; ' + (Math.abs(r.up - r.down) > 1e-9 ? 'top and bottom swapped; ' : '') + 'typing into Outside Size. Field names follow the Wizard CMC software\u2019s Edit New Mat screen. Your machine or software version may label them a little differently, so match by meaning: Borders are the mat widths from the outside edge to the window.</p>';
+  const c = (lab, a, b) => '<tr><td>' + lab + '</td><td><span class="n">' + a + '</span></td><td class="d">' + b + '</td></tr>';
+  const cell = x => '<td class="n">' + esc(fxl(x)) + '</td><td class="d">' + dl(x) + '</td>';
+  const row = (lab, x) => '<tr><td>' + lab + '</td>' + cell(x) + '</tr>';
+  let h = '<table><tr><th>Current mat</th><th>Inches</th><th>Decimal</th></tr>';
+  if (r.mount === 'float'){
+    h += row('Backer width', r.odW) + row('Backer height', r.odH) + '</table><p class="hint">Float mount: no window.</p>';
+  } else {
+    h += row('Opening width', r.vaW) + row('Opening height', r.vaH) + row('Top', r.up) + row('Bottom', r.down) +
+      (sidesEq ? row('Side', r.left) : row('Left', r.left) + row('Right', r.right)) +
+      row('Outside width', r.odW) + row('Outside height', r.odH) + '</table>';
+    if (!sidesEq) h += '<p class="cut-warn" style="margin-top:8px;padding:6px 10px;border-left:4px solid var(--warn);background:#fbf0dc;font-size:13px">Left and right borders differ. The list will flag this line.</p>';
+  }
+  $('curMat').innerHTML = h;
+  $('curDiagram').innerHTML = r.mount === 'float' ? '' : cutDiagram(r);
+}
+const sameItem = (a, b) => ['kind','label','board','vaW','vaH','up','down','left','right','odW','odH'].every(k => a[k] === b[k]);
+function clAdd(){
+  const r = last; if (curState(r).no) return;
+  const it = curItem(r), q = Math.max(1, Math.min(999, Math.round(+$('addQty').value) || 1));
+  const hit = CL.items.find(x => sameItem(x, it));
+  if (hit){ hit.qty = Math.min(999, hit.qty + q); flash('Added ' + q + ' to line ' + (CL.items.indexOf(hit) + 1) + '. Quantity is now ' + hit.qty + '.'); }
+  else { it.id = Date.now() + '' + Math.floor(Math.random() * 1000); it.qty = q; CL.items.push(it); flash('Added as line ' + CL.items.length + '.'); }
+  clSave(); renderList();
+}
+function sideTxt(it){ return Math.abs(it.left - it.right) < 1e-9 ? null : it; }
+function renderList(){
+  const n = CL.items.length, dec = CL.meta.dec;
+  const mats = CL.items.filter(x => x.kind === 'mat').reduce((a, x) => a + x.qty, 0);
+  const bks = CL.items.filter(x => x.kind === 'backer').reduce((a, x) => a + x.qty, 0);
+  const when = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  $('listInfo').textContent = when + ' · ' + mats + ' mat' + (mats === 1 ? '' : 's') + (bks ? ' · ' + bks + ' backer' + (bks === 1 ? '' : 's') : '');
+  if ($('listJob') !== document.activeElement) $('listJob').value = CL.meta.job;
+  if ($('listNotes') !== document.activeElement) $('listNotes').value = CL.meta.notes;
+  $('clDec').checked = !!dec;
+  $('listMetaPv').innerHTML = (CL.meta.job ? '<div><b>' + esc(CL.meta.job) + '</b></div>' : '') + (CL.meta.notes ? '<div>' + esc(CL.meta.notes).replace(/\n/g, '<br>') + '</div>' : '');
+  ['clCopy','clCsv','clMail','clPrint','clClear','printCutBtn'].forEach(id => $(id).disabled = !n);
+  if (!n){ $('listBody').innerHTML = '<div class="cl-empty">No mats on the list. Set the size above and choose Add to cut list.</div>'; $('listFoot').textContent = ''; return; }
+  const v = x => '<span class="f">' + esc(fxl(x)) + '</span>' + (dec ? '<span class="dd">' + dl(x) + '</span>' : '');
+  const pair = (a, b) => '<td class="wh">' + '<div>' + v(a) + '</div><div>× ' + '</div></td>';
+  const wh = (w, h) => '<td class="wh"><span class="f">' + esc(fxl(w)) + ' × ' + esc(fxl(h)) + '</span>' + (dec ? '<span class="dd">' + dl(w) + ' × ' + dl(h) + '</span>' : '') + '</td>';
+  let h = '<table class="cl"><tr><th>#</th><th>Qty</th><th>Label</th><th>Opening (W × H)</th><th>Top</th><th>Bottom</th><th>Side</th><th>Outside (W × H)</th><th>Board / notes</th><th class="rmc"></th></tr>';
+  CL.items.forEach((it, i) => {
+    const bk = it.kind === 'backer', uneven = !bk && !!sideTxt(it);
+    h += '<tr class="' + (uneven ? 'flag' : '') + '" data-id="' + it.id + '"><td class="ln">' + (i + 1) + '</td>' +
+      '<td class="qty"><span class="sv"><button class="ghost step" data-a="dn" aria-label="Fewer">−</button> </span><span class="qn">' + it.qty + '</span><span class="sv"> <button class="ghost step" data-a="up" aria-label="More">+</button></span></td>' +
+      '<td><span class="sv"><input class="t" data-f="label" value="' + esc(it.label) + '"></span><span class="pv">' + esc(it.label) + '</span></td>';
+    if (bk) h += '<td colspan="4" class="bk">Backer only, no opening</td>' + wh(it.odW, it.odH);
+    else h += wh(it.vaW, it.vaH) + '<td>' + v(it.up) + '</td><td>' + v(it.down) + '</td>' +
+      '<td>' + (uneven ? '<span class="f">L ' + esc(fxl(it.left)) + '</span><span class="f">R ' + esc(fxl(it.right)) + '</span>' + (dec ? '<span class="dd">' + dl(it.left) + ' / ' + dl(it.right) + '</span>' : '') : v(it.left)) + '</td>' + wh(it.odW, it.odH);
+    h += '<td><span class="sv"><input class="t" data-f="board" value="' + esc(it.board) + '"></span><span class="pv">' + esc(it.board) + '</span></td>' +
+      '<td class="rmc"><button class="rm" data-a="rm" aria-label="Remove line">×</button></td></tr>';
+  });
+  h += '<tr class="tot"><td></td><td><span class="qn">' + (mats + bks) + '</span></td><td colspan="8">' + mats + ' mat' + (mats === 1 ? '' : 's') + (bks ? ', ' + bks + ' backer' + (bks === 1 ? '' : 's') : '') + ' in ' + n + ' line' + (n === 1 ? '' : 's') + '</td></tr></table>';
+  $('listBody').innerHTML = h;
+  const anyUneven = CL.items.some(x => x.kind === 'mat' && sideTxt(x));
+  $('listFoot').textContent = 'Inches. W × H as the piece hangs. Borders run from the outside edge to the opening; the frame lip is already allowed for. Outside is the finished mat size.' + (anyUneven ? ' Shaded lines have different left and right borders.' : '');
+}
+function clText(){
+  const L = [], when = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  L.push('MAT CUTTING LIST' + (CL.meta.job ? ' — ' + CL.meta.job : '')); L.push(when);
+  if (CL.meta.notes) L.push(CL.meta.notes);
+  L.push('Inches. W x H as the piece hangs. Borders run from the outside edge to the opening.'); L.push('');
+  const f = x => { const a = fxl(x).replace('"', ''); return CL.meta.dec ? a + ' (' + dl(x) + ')' : a; };
+  CL.items.forEach((it, i) => {
+    const sd = it.kind === 'mat' && sideTxt(it);
+    L.push((i + 1) + '. Qty ' + it.qty + ' | ' + it.label + (it.board ? ' | ' + it.board : ''));
+    if (it.kind === 'backer') L.push('   Backer only, no opening. Cut ' + f(it.odW) + ' x ' + f(it.odH));
+    else L.push('   Opening ' + f(it.vaW) + ' x ' + f(it.vaH) + ' | Top ' + f(it.up) + ' | Bottom ' + f(it.down) + ' | ' + (sd ? 'Left ' + f(it.left) + ' | Right ' + f(it.right) : 'Side ' + f(it.left)) + ' | Outside ' + f(it.odW) + ' x ' + f(it.odH));
+  });
+  L.push(''); L.push('Total: ' + CL.items.reduce((a, x) => a + x.qty, 0) + ' pieces in ' + CL.items.length + ' lines');
+  return L.join('\n');
+}
+function clCsv(){
+  const q = x => '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"';
+  const rows = [['Line','Qty','Type','Label','Opening W','Opening H','Top','Bottom','Left','Right','Outside W','Outside H','Board / notes']];
+  CL.items.forEach((it, i) => rows.push([i + 1, it.qty, it.kind === 'backer' ? 'Backer' : 'Mat', it.label, it.vaW, it.vaH, it.up, it.down, it.left, it.right, it.odW, it.odH, it.board]));
+  return rows.map(r => r.map(q).join(',')).join('\r\n');
+}
+$('addBtn').onclick = clAdd;
+$('listBody').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const tr = b.closest('tr'), it = CL.items.find(x => String(x.id) === tr.dataset.id); if (!it) return;
+  const a = b.dataset.a;
+  if (a === 'up') it.qty = Math.min(999, it.qty + 1);
+  else if (a === 'dn') it.qty = Math.max(1, it.qty - 1);
+  else if (a === 'rm') CL.items = CL.items.filter(x => x !== it);
+  clSave(); renderList();
+});
+$('listBody').addEventListener('input', e => {
+  const t = e.target; if (!t.dataset.f) return;
+  const it = CL.items.find(x => String(x.id) === t.closest('tr').dataset.id); if (!it) return;
+  it[t.dataset.f] = t.value; clSave();
+});
+$('listJob').addEventListener('input', () => { CL.meta.job = $('listJob').value; clSave(); $('listMetaPv').innerHTML = ''; renderList(); });
+$('listNotes').addEventListener('input', () => { CL.meta.notes = $('listNotes').value; clSave(); renderList(); });
+$('clDec').addEventListener('change', () => { CL.meta.dec = $('clDec').checked; clSave(); renderList(); });
+$('clCopy').onclick = async () => {
+  const t = clText();
+  try { await navigator.clipboard.writeText(t); $('clCopy').textContent = 'Copied'; }
+  catch(e){ window.prompt('Copy this list:', t); }
+  setTimeout(() => $('clCopy').textContent = 'Copy as text', 1200);
+};
+$('clCsv').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([clCsv()], {type:'text/csv'}));
+  a.download = 'mat-cut-list.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
+$('clMail').onclick = () => { location.href = 'mailto:?subject=' + encodeURIComponent('Mat cutting list' + (CL.meta.job ? ' — ' + CL.meta.job : '')) + '&body=' + encodeURIComponent(clText()); };
+let clArm = 0;
+$('clClear').onclick = () => {
+  if (!clArm){ $('clClear').textContent = 'Click again to clear'; clArm = setTimeout(() => { clArm = 0; $('clClear').textContent = 'Clear list'; }, 3000); return; }
+  clearTimeout(clArm); clArm = 0; $('clClear').textContent = 'Clear list';
+  CL.items = []; clSave(); renderList();
+};
+function printList(){
+  if (!CL.items.length) return;
+  const st = document.createElement('style'); st.media = 'print'; st.textContent = '@page{size:letter landscape;margin:.4in}';
+  document.head.appendChild(st); document.body.classList.add('printcut');
+  let fin = false;
+  const done = () => { if (fin) return; fin = true; document.body.classList.remove('printcut'); st.remove(); };
+  window.addEventListener('afterprint', done, {once:true});
+  window.print();
+  setTimeout(done, 60000);
 }
 
 /* ---------- summary ---------- */
@@ -1107,13 +1268,8 @@ $('sizePreset').addEventListener('change', () => {
 $('swapBtn').onclick = () => { const t = $('conH').value; $('conH').value = $('conW').value; $('conW').value = t; render(); };
 
 $('printBtn').onclick = () => window.print();
-$('printCutBtn').onclick = () => {
-  document.body.classList.add('printcut');
-  const done = () => document.body.classList.remove('printcut');
-  window.addEventListener('afterprint', done, {once:true});
-  window.print();
-  setTimeout(done, 1500);
-};
+$('printCutBtn').onclick = printList;
+$('clPrint').onclick = printList;
 $('copyBtn').onclick = async () => {
   const t = summary(last);
   try { await navigator.clipboard.writeText(t); $('copyBtn').textContent = 'Copied'; }
@@ -1128,8 +1284,10 @@ $('resetBtn').onclick = () => {
   $('recMat').checked = $('recFace').checked = $('recDepth').checked = $('lockOD').checked = false;
   $('overlap').value = 0.25; $('sizeBasis').value = 'od'; $('winSrc').value = 'art';
   $('ratioSys').value = 'golden'; $('matWeight').value = '0.24'; $('matStyle').value = 'raised';
+  renderList();
   render();
 };
+renderList();
 render();
 </script>
 </body>
