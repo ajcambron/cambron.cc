@@ -17,6 +17,15 @@ It is one HTML file with no network calls. Save it, open it offline, or put it o
 * Draws a cross-section of the frame profile, to scale in depth, and a front view, to scale.
 * Accepts decimals or fractions (8.5, 8 1/2, 3/16) and shows answers in fractions down to 1/32 in.
 
+## Constraints
+Tick "Lock the glass / mat size" when the size is already decided, either a stock size (8 × 10 up to 24 × 36) or the opening of a frame you already own. The calculator then works backward: it takes the window and places it inside that size by ratio, and the reveals fall out.
+
+* Window size can come from the art minus an overlap, from the visible area fields, or from a mat weight (narrow, standard, wide) set by the ratio.
+* Placement options are raised (top:bottom 1:R), strongly raised (1:R²), three sides even with the bottom taking the rest, centered, window centered on the ratio line, or manual.
+* R is the Golden Section by default. DIN paper (1:1.414) and Tatami (1:2) are there too.
+* Every reveal snaps to 1/32 in. and the bottom or right side takes the remainder, so the pieces always add up to the locked size.
+* If the window does not fit, or the art would stick out past the mat on one side, the Checks panel says so.
+
 ## Checks it runs
 * The mat OD must be at least the size of the art, and the visible area cannot exceed it.
 * The mat window should overlap the art by at least 1/8 in. per side so there is something to hinge to.

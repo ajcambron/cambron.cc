@@ -143,31 +143,61 @@
   </section>
 
   <section class="card">
-    <h2>Grid ratios</h2>
-    <div class="row r3">
+    <h2>Constraints and ratios</h2>
+    <div class="row r2">
       <label class="f">Ratio system
         <select id="ratioSys">
           <option value="golden">Golden Section 1:1.618</option>
           <option value="din">DIN paper 1:1.414</option>
           <option value="tatami">Tatami 1:2</option>
         </select></label>
+      <label class="f">Window placement
+        <select id="matStyle">
+          <option value="raised" selected>Raised: top:bottom 1:R</option>
+          <option value="strong">Strongly raised: 1:R&sup2;</option>
+          <option value="three">Three sides even, heavier bottom</option>
+          <option value="equal">Centered</option>
+          <option value="line">Window centered on the ratio line</option>
+          <option value="manual">Manual: I set top and left</option>
+        </select></label>
+    </div>
+
+    <label class="tick"><input type="checkbox" id="lockOD"> Lock the glass / mat size</label>
+    <div class="row r3">
+      <label class="f">Size given as
+        <select id="sizeBasis">
+          <option value="od" selected>Glass / mat (OD)</option>
+          <option value="id">Existing frame ID</option>
+        </select></label>
+      <label class="f">Standard size
+        <select id="sizePreset"></select></label>
+      <label class="f"><span>&nbsp;</span><button type="button" id="swapBtn" class="ghost">Swap H / W</button></label>
+    </div>
+    <div class="row r2">
+      <label class="f">Height (H)<input type="text" id="conH" inputmode="decimal" placeholder="11"></label>
+      <label class="f">Width (W)<input type="text" id="conW" inputmode="decimal" placeholder="14"></label>
+    </div>
+    <div class="row r3">
+      <label class="f">Window comes from
+        <select id="winSrc">
+          <option value="art" selected>Art minus overlap</option>
+          <option value="manual">Visible area fields</option>
+          <option value="ratio">Mat weight (ratio)</option>
+        </select></label>
+      <label class="f">Overlap on art, per side<input type="text" id="overlap" inputmode="decimal" value="0.25"></label>
       <label class="f">Mat weight
         <select id="matWeight">
           <option value="0.15">Narrow</option>
           <option value="0.24" selected>Standard</option>
           <option value="0.38">Wide</option>
         </select></label>
-      <label class="f">Mat style
-        <select id="matStyle">
-          <option value="raised" selected>Raised, top:bottom 1:R</option>
-          <option value="strong">Strongly raised, 1:R&sup2;</option>
-          <option value="three">Three sides even, heavier bottom</option>
-          <option value="equal">Centered, equal on all sides</option>
-        </select></label>
     </div>
+    <p class="hint" id="conHint"></p>
+
+    <h3>Recommendations</h3>
     <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
     <label class="tick"><input type="checkbox" id="recFace"> Recommend frame face width from the ratio</label>
-    <p class="hint">Ticked fields fill themselves and lock. Recommendations snap to 1/32 in. Applies to matted and float mounts.</p>
+    <p class="hint">Ticked fields fill themselves and lock. Everything snaps to 1/32 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
   </section>
 
   <section class="card">
@@ -333,6 +363,11 @@ function frac(x, den, up){
   while (n % 2 === 0){ n /= 2; d /= 2; }
   return (w ? w + ' ' : '') + n + '/' + d + '"';
 }
+function fx(x){
+  if (!ok(x)) return '\u2014';
+  const P = +$('prec').value;
+  return Math.abs(x * P - Math.round(x * P)) < 1e-9 ? frac(x, P) : dec(x) + '"';
+}
 function both(x, up){
   if (!ok(x)) return '—';
   const f = frac(x, +$('prec').value, up);
@@ -355,6 +390,7 @@ const snap32 = x => Math.max(1/32, Math.round(x * 32) / 32);
 const toStr = x => frac(x, 32).replace('"', '');
 const stepK = (target, R) => Math.max(1, Math.round(-Math.log(target) / Math.log(R)));
 let recNotes = [];
+let cons = null;
 
 function applyRecs(){
   recNotes = [];
@@ -367,9 +403,9 @@ function applyRecs(){
     const a = parseIn($('vaH').value), b = parseIn($('vaW').value);
     if (ok(a)) vaH = a; if (ok(b)) vaW = b;
   }
-  const dimsOk = ok(vaH) && ok(vaW);
+  const dimsOk = ok(vaH) && ok(vaW) || !!(cons && cons.ok);
 
-  if ($('recMat').checked && mount !== 'flush'){
+  if ($('recMat').checked && mount !== 'flush' && !(cons && cons.ok)){
     if (!dimsOk){
       recNotes.push('Enter the art size to get recommended reveals.');
     } else {
@@ -399,7 +435,8 @@ function applyRecs(){
     } else {
       const z = v => ok(v) ? v : 0;
       let odH = vaH, odW = vaW;
-      if (mount !== 'flush'){
+      if (cons && cons.ok){ odH = cons.odH; odW = cons.odW; }
+      else if (mount !== 'flush'){
         odH += z(parseIn($('revUp').value)) + z(parseIn($('revDown').value));
         odW += z(parseIn($('revLeft').value)) + z(parseIn($('revRight').value));
       }
@@ -415,12 +452,101 @@ function applyRecs(){
   }
 }
 
+/* ---------- constraints: locked glass / mat size ---------- */
+const PLACE = {
+  raised: 'top:bottom = 1:R, sides centered',
+  strong: 'top:bottom = 1:R², sides centered',
+  three:  'top and sides even, bottom takes the rest',
+  equal:  'centered',
+  line:   'window centered on the ratio line, 1 − 1/R of the height down from the top',
+  manual: 'top and left as entered, bottom and right take the rest'
+};
+const fmtIn = x => Math.abs(x * 32 - Math.round(x * 32)) < 1e-9 ? toStr(x) : dec(x);
+const PRESETS = [[4,6],[5,7],[8,10],[8.5,11],[9,12],[11,14],[12,12],[12,16],[14,18],[16,20],[18,24],[20,24],[22,28],[24,30],[24,36]];
+
+function applyConstraints(){
+  cons = null;
+  const mount = radio('mount');
+  if (!$('lockOD').checked || mount === 'flush') return;
+  const p = +$('prec').value, fr = x => frac(x, p);
+  const R = RATIO[$('ratioSys').value].v;
+  const lipV = parseIn($('lip').value), lip = ok(lipV) ? lipV : 0.25;
+  const clr = +$('clr').value;
+  const cH = parseIn($('conH').value), cW = parseIn($('conW').value);
+  if (!ok(cH) || !ok(cW) || cH <= 0 || cW <= 0){ cons = {incomplete:true}; return; }
+  const basis = $('sizeBasis').value;
+  const odH = basis === 'id' ? cH - clr : cH, odW = basis === 'id' ? cW - clr : cW;
+  const artH = parseIn($('artH').value), artW = parseIn($('artW').value);
+  const matted = mount === 'matted';
+  const src = matted ? $('winSrc').value : 'art';
+  let vaH, vaW, srcNote;
+  if (src === 'ratio'){
+    const k = stepK(parseFloat($('matWeight').value), R);
+    const m = snap32(Math.min(odH, odW) / Math.pow(R, k));
+    vaH = odH - 2 * m; vaW = odW - 2 * m;
+    srcNote = 'mat weight (OD short side ÷ R^' + k + ' = ' + fr(m) + ' per side)';
+  } else if (!ok(artH) || !ok(artW)){
+    cons = {incomplete:true, needArt:true}; return;
+  } else if (src === 'art'){
+    const ov = parseIn($('overlap').value), o = matted ? (ok(ov) && ov >= 0 ? ov : 0.25) : 0;
+    vaH = artH - 2 * o; vaW = artW - 2 * o;
+    srcNote = matted ? 'the art minus ' + fr(o) + ' overlap per side' : 'the art';
+  } else {
+    const a = parseIn($('vaH').value), b = parseIn($('vaW').value);
+    vaH = ok(a) ? a : artH; vaW = ok(b) ? b : artW;
+    srcNote = 'the visible area fields';
+  }
+  const mh = odH - vaH, mw = odW - vaW;
+  const base = {odH, odW, vaH, vaW, R, lip, srcNote, src, basis, cH, cW, mh, mw};
+  if (!(vaH > 0) || !(vaW > 0) || !(mh > 1e-9) || !(mw > 1e-9)){ cons = Object.assign(base, {error:true}); return; }
+
+  const style = $('matStyle').value;
+  const split = (total, f) => { const a = Math.min(total, Math.max(0, Math.round(total * f * 32) / 32)); return [a, total - a]; };
+  const warns = [];
+  let up, down, left, right;
+  [left, right] = split(mw, 0.5);
+  if (style === 'equal'){ [up, down] = split(mh, 0.5); }
+  else if (style === 'strong'){ [up, down] = split(mh, 1 / (1 + R * R)); }
+  else if (style === 'three'){ up = Math.min(mh, left); down = mh - up; }
+  else if (style === 'line'){
+    const want = odH * (1 - 1 / R) - vaH / 2;
+    [up, down] = split(mh, Math.min(1, Math.max(0, want / mh)));
+    if (want < -1e-9 || want > mh + 1e-9) warns.push('The ratio line is out of reach for this window, so it sits against the ' + (want < 0 ? 'top' : 'bottom') + ' edge of the mat.');
+  } else if (style === 'manual'){
+    const u = parseIn($('revUp').value), l = parseIn($('revLeft').value);
+    up = Math.min(mh, Math.max(0, ok(u) ? u : mh / 2));
+    left = Math.min(mw, Math.max(0, ok(l) ? l : mw / 2));
+    down = mh - up; right = mw - left;
+  } else { [up, down] = split(mh, 1 / (1 + R)); }
+
+  const put = (id, x) => { $(id).value = fmtIn(x); };
+  if (matted && src !== 'manual'){ put('vaH', vaH); put('vaW', vaW); }
+  if (!matted){ $('vaH').value = ''; $('vaW').value = ''; }
+  if (style !== 'manual'){ put('revUp', up); put('revLeft', left); }
+  put('revDown', down); put('revRight', right);
+  $('revAll').value = '';
+
+  if (style === 'three' && down < up - 1e-9) warns.push('The bottom is lighter than the top. Use a taller glass or a smaller window if the bottom should be heavier.');
+  if (style !== 'manual'){
+    if (Math.abs(left - right) > 1e-9) warns.push('Left and right differ by ' + fr(Math.abs(left - right)) + ' because the margin does not split evenly on the 1/32 in. grid.');
+    if (style === 'equal' && Math.abs(up - down) > 1e-9) warns.push('Top and bottom differ by ' + fr(Math.abs(up - down)) + ' because the margin does not split evenly on the 1/32 in. grid.');
+  }
+  const notes = [
+    'Locked ' + fr(odH) + ' H × ' + fr(odW) + ' W' + (basis === 'id' ? ' (frame ID ' + fr(cH) + ' × ' + fr(cW) + ' less ' + fr(clr) + ' clearance)' : '') +
+      '. Window ' + fr(vaH) + ' × ' + fr(vaW) + ' from ' + srcNote + '.',
+    'Placement: ' + PLACE[style] + '. Reveals: top ' + fr(up) + ', bottom ' + fr(down) + ', left ' + fr(left) + ', right ' + fr(right) +
+      '. Top:bottom = ' + (up > 1e-9 ? '1:' + (down / up).toFixed(3) : 'n/a') + ', R = ' + R.toFixed(3) + '.'
+  ];
+  cons = Object.assign(base, {ok:true, up, down, left, right, style, notes, warns});
+}
+
 /* ---------- state read ---------- */
 function read(){
+  applyConstraints();
   applyRecs();
   const mount = radio('mount');
   const g = {};
-  const ids = ['artH','artW','artD','vaH','vaW','revUp','revDown','revLeft','revRight','lip','glazeT','spacerT','matT','backT','strainerT','rabbet','face','lipT'];
+  const ids = ['artH','artW','artD','vaH','vaW','revUp','revDown','revLeft','revRight','lip','glazeT','spacerT','matT','backT','strainerT','rabbet','face','lipT','conH','conW','overlap'];
   const bad = [];
   ids.forEach(id => {
     const v = parseIn($(id).value);
@@ -442,6 +568,13 @@ function read(){
     if (mount === 'float'){ r.up = g.revUp; r.down = g.revDown; r.left = g.revLeft; r.right = g.revRight; }
     else { r.up = r.down = r.left = r.right = 0; }
   }
+  if (cons && cons.ok){
+    r.vaH = cons.vaH; r.vaW = cons.vaW;
+    r.up = cons.up; r.down = cons.down; r.left = cons.left; r.right = cons.right;
+  } else if (cons && cons.error){
+    r.up = r.down = r.left = r.right = null;
+  }
+  r.cons = cons;
   const needRev = mount !== 'flush';
   const haveRev = !needRev || [r.up, r.down, r.left, r.right].every(ok);
   r.odH = ok(r.vaH) && haveRev ? r.vaH + z(r.up) + z(r.down) : null;
@@ -475,7 +608,7 @@ function renderResults(r){
   $('tbArtist').textContent = $('artist').value.trim();
 
   const line = (lab, va, a, b, od) =>
-    '<b>' + lab + '</b><span>' + [dec(va) + '"', r.mount === 'flush' ? '' : '+ ' + dec(a) + ' + ' + dec(b), '= ' + dec(od) + '"'].filter(Boolean).join('  ') + '</span>';
+    '<b>' + lab + '</b><span>' + [fx(va), r.mount === 'flush' ? '' : '+ ' + fx(a) + ' + ' + fx(b), '= ' + fx(od)].filter(Boolean).join('  ') + '</span>';
   if (r.mount === 'flush'){
     $('math').innerHTML =
       '<b>H</b><span>' + dec(r.vaH) + '" = ' + frac(r.odH, +$('prec').value) + '</span>' +
@@ -506,7 +639,10 @@ function renderResults(r){
   const n = [];
   const add = (cls, msg) => n.push('<li class="' + cls + '">' + msg + '</li>');
   if (r.bad.length) add('bad', 'One or more fields are not readable as a number or fraction (outlined in red).');
-  if (!ok(r.artH) || !ok(r.artW)) add('info', 'Enter the art height and width to get dimensions.');
+  if (r.cons && r.cons.error) add('bad', 'The window (' + frac(r.cons.vaH, +$('prec').value) + ' \u00d7 ' + frac(r.cons.vaW, +$('prec').value) + ') does not fit inside the locked ' + frac(r.cons.odH, +$('prec').value) + ' \u00d7 ' + frac(r.cons.odW, +$('prec').value) + ' glass / mat size. Pick a bigger size or a smaller window.');
+  else if (r.cons && r.cons.incomplete) add('info', r.cons.needArt ? 'Enter the art size to apply the locked glass / mat size.' : 'Enter the glass / mat height and width to apply the lock.');
+  if (r.cons && r.cons.error) { /* message above covers it */ }
+  else if ((!ok(r.artH) || !ok(r.artW)) && !(r.cons && r.cons.ok)) add('info', 'Enter the art height and width to get dimensions.');
   else if (r.mount !== 'flush' && !(ok(r.up) && ok(r.down) && ok(r.left) && ok(r.right))) add('info', 'Enter all four reveals.');
   if (ok(r.odH) && ok(r.odW)){
     if (r.mount === 'flush'){
@@ -514,7 +650,7 @@ function renderResults(r){
     } else {
       const small = [['up',r.up],['down',r.down],['left',r.left],['right',r.right]].filter(p => p[1] < r.lip - 1e-9).map(p => p[0]);
       if (small.length) add('warn', 'Reveal on ' + small.join(', ') + ' is under the ' + frac(r.lip, +$('prec').value) + ' lip. The frame will cover part of the visible area there.');
-      else add('ok', 'Visible reveal after the lip: ' + ['up','down','left','right'].map(k => k + ' ' + dec(r[k] - r.lip)).join(', ') + ' in.');
+      else add('ok', 'Visible reveal after the lip: ' + ['up','down','left','right'].map(k => k + ' ' + fx(r[k] - r.lip)).join(', ') + '.');
     }
     if (r.mount === 'matted' && ok(r.artH) && ok(r.artW)){
       if (r.odH + 1e-9 < r.artH || r.odW + 1e-9 < r.artW)
@@ -524,6 +660,12 @@ function renderResults(r){
       else if (r.artH - r.vaH < 0.25 - 1e-9 || r.artW - r.vaW < 0.25 - 1e-9)
         add('warn', 'The mat window overlaps the art by under 1/8 in. per side. That leaves little to hinge or tape to.');
     }
+    if (r.mount === 'matted' && ok(r.artH) && ok(r.artW) && r.odH + 1e-9 >= r.artH && r.odW + 1e-9 >= r.artW){
+      const oh = (r.artH - r.vaH) / 2, ow = (r.artW - r.vaW) / 2;
+      const out = [['top', r.up, oh], ['bottom', r.down, oh], ['left', r.left, ow], ['right', r.right, ow]]
+        .filter(q => q[2] > 1e-9 && q[1] < q[2] - 1e-9).map(q => q[0]);
+      if (out.length) add('bad', 'With the art centered behind the window, it sticks out past the mat at the ' + out.join(', ') + '. The reveal there is smaller than the art overhang.');
+    }
     if (r.mount === 'float' && r.up > 0 && r.glaze === 'none') add('info', 'Float mount without glazing leaves the art exposed. Consider glazing.');
   }
   if (ok(r.rabbet)){
@@ -531,6 +673,7 @@ function renderResults(r){
     else add('ok', 'Moulding rabbet clears the stack with ' + dec(r.rabbet - r.minDepth) + ' in. to spare.');
   }
   if (r.strainer && r.strainerT === 0) add('info', 'Strainer is set to Yes with no size.');
+  if (r.cons && r.cons.ok){ r.cons.warns.forEach(t => add('warn', esc(t))); r.cons.notes.forEach(t => add('info', esc(t))); }
   recNotes.forEach(t => add('info', esc(t)));
   $('notes').innerHTML = n.join('') || '<li class="info">No issues.</li>';
 }
@@ -704,6 +847,12 @@ function drawFront(r){
 }
 
 
+function placeLabel(r){
+  if (r.mount === 'flush') return 'n/a';
+  if (r.cons && r.cons.ok) return $('matStyle').selectedOptions[0].textContent.replace('1:R', '1:' + r.cons.R.toFixed(3));
+  return $('recMat').checked ? $('matStyle').selectedOptions[0].textContent : 'Entered by hand';
+}
+
 /* ---------- printed worksheet table ---------- */
 function renderSpecs(r){
   const lab = {matted:'Matted', float:'Float mount', flush:'Flush mount'}[r.mount];
@@ -711,8 +860,9 @@ function renderSpecs(r){
   const d3 = x => ok(x) ? dec(x) + '"' : '\u2014';
   const rows = [
     ['Art title', v('title'), 'Artist', v('artist')],
-    ['Art size H \u00d7 W \u00d7 D', d3(r.artH) + ' \u00d7 ' + d3(r.artW) + ' \u00d7 ' + d3(r.artD), 'Visible area (Window) H \u00d7 W', d3(r.vaH) + ' \u00d7 ' + d3(r.vaW)],
-    ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(x => ok(x) ? dec(x) : '\u2014').join(' / ') + ' in.'],
+    ['Art size H \u00d7 W \u00d7 D', fx(r.artH) + ' \u00d7 ' + fx(r.artW) + ' \u00d7 ' + d3(r.artD), 'Visible area (Window) H \u00d7 W', fx(r.vaH) + ' \u00d7 ' + fx(r.vaW)],
+    ['Glass / mat (OD) H \u00d7 W', fx(r.odH) + ' \u00d7 ' + fx(r.odW) + (r.cons && r.cons.ok ? ' (locked)' : ''), 'Window placement', placeLabel(r)],
+    ['Mount', lab, 'Reveal up / down / left / right', r.mount === 'flush' ? 'none' : [r.up, r.down, r.left, r.right].map(fx).join(' / ')],
     ['Glazing', r.glaze === 'none' ? 'None' : (r.glaze === 'glass' ? 'Glass ' : 'Plexi ') + d3(r.glazeT), 'Spacers', r.spacer ? d3(r.spacerT) : 'No'],
     ['Mat', r.mount === 'matted' ? v('matType') + ' ' + d3(r.matT) : 'n/a', 'Backer', v('backType') + ' ' + d3(r.backT)],
     ['Strainer', r.strainer ? d3(r.strainerT) : 'No', 'Clearance / lip over OD / lip thick', [r.clr, r.lip, r.lipT].map(x => frac(x, +$('prec').value)).join(' / ')],
@@ -731,6 +881,7 @@ function summary(r){
   if ($('title').value.trim()) L.push('Art: ' + $('title').value.trim() + ($('artist').value.trim() ? ' by ' + $('artist').value.trim() : ''));
   L.push('Art size: ' + dec(r.artH) + ' H x ' + dec(r.artW) + ' W x ' + dec(r.artD) + ' D');
   L.push('Mount: ' + r.mount + '   Visible area (Window): ' + dec(r.vaH) + ' H x ' + dec(r.vaW) + ' W');
+  L.push('Glass/mat (OD): ' + dec(r.odH) + ' H x ' + dec(r.odW) + ' W' + (r.cons && r.cons.ok ? ' (locked)' : '') + '   Window placement: ' + placeLabel(r));
   if (r.mount !== 'flush') L.push('Reveal: up ' + dec(r.up) + ', down ' + dec(r.down) + ', left ' + dec(r.left) + ', right ' + dec(r.right));
   L.push('OD: ' + dec(r.odH) + ' H x ' + dec(r.odW) + ' W  (' + frac(r.odH,p) + ' x ' + frac(r.odW,p) + ')');
   L.push('Frame ID: ' + dec(r.idH) + ' H x ' + dec(r.idW) + ' W  (' + frac(r.idH,p) + ' x ' + frac(r.idW,p) + ')');
@@ -747,11 +898,29 @@ let last;
 function render(){
   const m = radio('mount');
   const matted = m === 'matted', flush = m === 'flush';
-  ['vaH','vaW'].forEach(id => $(id).disabled = !matted);
-  $('recMat').disabled = flush;
-  const lockRev = flush || ($('recMat').checked && !flush);
-  ['revUp','revDown','revLeft','revRight','revAll'].forEach(id => $(id).disabled = lockRev);
-  ['matWeight','matStyle'].forEach(id => $(id).disabled = flush || !$('recMat').checked);
+  const lockOn = $('lockOD').checked && !flush;
+  const src = $('winSrc').value;
+  $('lockOD').disabled = flush;
+  if (lockOn && $('recMat').checked) $('recMat').checked = false;
+  ['conH','conW','sizeBasis','sizePreset','swapBtn'].forEach(id => $(id).disabled = !lockOn);
+  $('winSrc').disabled = !(lockOn && matted);
+  $('overlap').disabled = !(lockOn && matted && src === 'art');
+  const winDerived = lockOn && matted && src !== 'manual';
+  ['vaH','vaW'].forEach(id => $(id).disabled = !matted || winDerived);
+  $('recMat').disabled = flush || lockOn;
+  Array.from($('matStyle').options).forEach(o => { if (o.value === 'line' || o.value === 'manual') o.disabled = !lockOn; });
+  if (!lockOn && ($('matStyle').value === 'line' || $('matStyle').value === 'manual')) $('matStyle').value = 'raised';
+  const manual = lockOn && $('matStyle').value === 'manual';
+  const lockRev = flush || $('recMat').checked || lockOn;
+  ['revUp','revLeft'].forEach(id => $(id).disabled = lockRev && !manual);
+  ['revDown','revRight','revAll'].forEach(id => $(id).disabled = lockRev);
+  $('matWeight').disabled = flush || !(($('recMat').checked && !lockOn) || (lockOn && matted && src === 'ratio'));
+  $('matStyle').disabled = !($('recMat').checked || lockOn);
+  { const Rn = RATIO[$('ratioSys').value].v.toFixed(3);
+    $('conHint').textContent = lockOn
+      ? 'Reveals are worked out from the locked size and the window: ' + PLACE[$('matStyle').value] + ' (R = ' + Rn + '). Frame ID = OD + clearance.'
+      : flush ? 'Flush mounts have no mat, so there is no size to lock.'
+      : 'Tick to fix the glass or mat size (a stock size, or the opening of a frame you already have). The window is then placed inside it by the ratio.'; }
   $('face').disabled = $('recFace').checked;
   $('matT').disabled = $('matType').disabled = !matted;
   $('glazeT').disabled = radio('glaze') === 'none';
@@ -759,7 +928,7 @@ function render(){
   $('strainerT').disabled = radio('strainer') === 'no';
   $('revTitle').textContent = matted ? 'Reveal (mat width)' : m === 'float' ? 'Reveal (exposed backer)' : 'Reveal (none)';
   $('vaHint').textContent = matted
-    ? 'The part of the art you want seen inside the mat. Blank means the full art size.'
+    ? (lockOn && src !== 'manual' ? 'Worked out from the locked glass / mat size (see Constraints).' : 'The part of the art you want seen inside the mat. Blank means the full art size.')
     : 'Float and flush mounts show the full art, so VA equals the art size.';
   $('vaH').placeholder = $('artH').value || ''; $('vaW').placeholder = $('artW').value || '';
   last = read();
@@ -786,6 +955,19 @@ document.querySelectorAll('input[name=strainer]').forEach(el => el.addEventListe
   $('strainerT').value = radio('strainer') === 'yes' ? 0.75 : ''; render();
 }));
 
+$('sizePreset').innerHTML = '<option value="">Choose...</option>' + PRESETS.map((q, i) => '<option value="' + i + '">' + toStr(q[0]) + ' \u00d7 ' + toStr(q[1]) + '</option>').join('');
+$('sizePreset').addEventListener('change', () => {
+  const i = $('sizePreset').value;
+  if (i === '') return;
+  const q = PRESETS[+i], aH = parseIn($('artH').value), aW = parseIn($('artW').value);
+  const portrait = ok(aH) && ok(aW) && aH > aW;
+  $('conH').value = toStr(portrait ? q[1] : q[0]);
+  $('conW').value = toStr(portrait ? q[0] : q[1]);
+  $('sizePreset').value = '';
+  render();
+});
+$('swapBtn').onclick = () => { const t = $('conH').value; $('conH').value = $('conW').value; $('conW').value = t; render(); };
+
 $('printBtn').onclick = () => window.print();
 $('copyBtn').onclick = async () => {
   const t = summary(last);
@@ -798,7 +980,8 @@ $('resetBtn').onclick = () => {
   $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25; $('lipT').value = 0.1875;
   $('m1').checked = $('g1').checked = $('s1').checked = $('t1').checked = true;
   $('clr').value = '0.0625'; $('prec').value = '32'; $('glazeT').value = GLAZE.plexi;
-  $('recMat').checked = $('recFace').checked = false;
+  $('recMat').checked = $('recFace').checked = $('lockOD').checked = false;
+  $('overlap').value = 0.25; $('sizeBasis').value = 'od'; $('winSrc').value = 'art';
   $('ratioSys').value = 'golden'; $('matWeight').value = '0.24'; $('matStyle').value = 'raised';
   render();
 };
