@@ -26,6 +26,9 @@ Tick "Lock the glass / mat size" when the size is already decided, either a stoc
 * Every reveal snaps to 1/32 in. and the bottom or right side takes the remainder, so the pieces always add up to the locked size.
 * If the window does not fit, or the art would stick out past the mat on one side, the Checks panel says so.
 
+## A cutting sheet for the mat cutter
+The printout ends with a second page written for the person running the mat cutter. It lists the numbers in the order and with the names the Wizard CMC software uses (Opening Size, Borders for top, bottom and side, and the Outside Size it calculates), a drawing of the mat, the loading steps, and the checks that catch the usual slips: width and height swapped, top and bottom swapped, or a number typed into Outside Size. A separate button prints only that page.
+
 ## Checks it runs
 * The mat OD must be at least the size of the art, and the visible area cannot exceed it.
 * The mat window should overlap the art by at least 1/8 in. per side so there is something to hinge to.

@@ -68,6 +68,22 @@
   svg text{font-family:var(--body)}
   .cap{font-size:12px;color:var(--muted);margin:6px 0 0}
   .titleblock{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:8px}
+  #cutCard{grid-column:1/-1}
+  .cut-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:-6px 0 10px}
+  .cut-grid{display:grid;gap:18px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
+  @media(max-width:760px){.cut-grid{grid-template-columns:1fr}}
+  .cut-tbl{width:100%;border-collapse:collapse}
+  .cut-tbl th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
+  .cut-tbl td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;font:700 13.5px var(--body)}
+  .cut-tbl td.n{font:600 20px var(--mono)}
+  .cut-tbl td.fr{font:500 14px var(--mono);color:var(--muted)}
+  .cut-tbl tr.calc td{background:#efe9d8}
+  .cut-tbl tr.bad td{background:#fdecec}
+  .cut-h{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+  ol.cut-steps,ul.cut-list{margin:4px 0 0 20px;padding:0;font-size:13.5px}
+  ol.cut-steps li,ul.cut-list li{margin:3px 0}
+  .cut-warn{margin:8px 0 0;padding:8px 10px;border-left:4px solid var(--warn);background:#fbf0dc;font-size:13px;border-radius:0 6px 6px 0}
+  .cut-foot{font-size:11.5px;color:var(--muted);margin:12px 0 0}
   .printonly{display:none}
   .rgrid{display:block}
   #specs td{border-bottom:1px dotted var(--line);padding:3px 4px}
@@ -107,6 +123,14 @@
     #front svg{max-height:2.1in}
     #profile svg{max-height:2in}
     #checksCard{align-self:stretch}
+    #cutCard{break-before:page;grid-column:auto;padding:10px 12px}
+    #cutCard h2{font-size:20px}
+    .cut-grid{grid-template-columns:1.05fr 1fr;gap:14px}
+    .cut-tbl td{padding:5px 6px}
+    .cut-tbl td.n{font-size:19px}
+    ol.cut-steps,ul.cut-list{font-size:12px}
+    body.printcut header,body.printcut .inputs,body.printcut .sticky{display:none!important}
+    body.printcut #cutCard{break-before:auto}
   }
 </style>
 </head>
@@ -116,6 +140,7 @@
   <div class="toolbar noprint">
     <button id="copyBtn" class="ghost">Copy summary</button>
     <button id="printBtn">Print</button>
+    <button id="printCutBtn" class="ghost">Print cutting sheet</button>
     <button id="resetBtn" class="ghost">Reset</button>
   </div>
 </header>
@@ -335,6 +360,11 @@
     <p class="cap">To scale. Red is the visible art, cream is mat or exposed backer, brown is the frame face.</p>
   </section>
 </div>
+
+<section class="card" id="cutCard">
+  <h2>Mat cutting order</h2>
+  <div id="cutBody"></div>
+</section>
 </main>
 
 <script>
@@ -887,6 +917,91 @@ function renderSpecs(r){
   h1.dataset.date = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
 }
 
+/* ---------- operator cutting sheet ---------- */
+function cutDiagram(r){
+  const VW = 400, VH = 330, ml = 64, mt = 48, mb = 40;
+  const S = Math.min((VW - ml * 2) / r.odW, (VH - mt - mb) / r.odH);
+  const mW = r.odW * S, mH = r.odH * S, ox = (VW - mW) / 2, oy = mt;
+  const wx = ox + r.left * S, wy = oy + r.up * S, ww = r.vaW * S, wh = r.vaH * S;
+  const RED = '#8a1f2b', T = (x, y, txt, o) => '<text x="' + x + '" y="' + y + '" font-size="' + ((o && o.fs) || 12) + '" ' +
+    (o && o.b ? 'font-weight="700" ' : '') + 'fill="' + ((o && o.c) || RED) + '" text-anchor="' + ((o && o.a) || 'middle') + '"' +
+    (o && o.rot ? ' transform="rotate(-90 ' + x + ' ' + y + ')"' : '') + '>' + txt + '</text>';
+  let g = '';
+  g += '<rect x="' + ox + '" y="' + oy + '" width="' + mW + '" height="' + mH + '" fill="#f6efdc" stroke="#444" stroke-width="1.5"/>';
+  g += '<rect x="' + wx + '" y="' + wy + '" width="' + ww + '" height="' + wh + '" fill="#fff" stroke="' + RED + '" stroke-width="1.5" stroke-dasharray="5 3"/>';
+  g += T(VW / 2, 18, 'Outside Size ' + fx(r.odW) + ' wide \u00d7 ' + fx(r.odH) + ' high', {b:1, c:'#1c1b1a', fs:13});
+  g += T(wx + ww / 2, wy + wh / 2 - 4, 'Opening Size', {c:'#6b665d'});
+  g += T(wx + ww / 2, wy + wh / 2 + 14, fx(r.vaW) + ' wide \u00d7 ' + fx(r.vaH) + ' high', {b:1, c:'#1c1b1a', fs:13});
+  const cx = ox + mW / 2, cy = oy + mH / 2;
+  // top
+  if (r.up * S >= 16) g += T(cx, oy + r.up * S / 2 + 4, 'Top ' + fx(r.up), {b:1});
+  else g += '<line x1="' + cx + '" y1="' + (oy - 4) + '" x2="' + cx + '" y2="' + (oy + r.up * S) + '" stroke="' + RED + '"/>' + T(cx, oy - 8, 'Top ' + fx(r.up), {b:1});
+  // bottom
+  if (r.down * S >= 16) g += T(cx, oy + mH - r.down * S / 2 + 4, 'Bottom ' + fx(r.down), {b:1});
+  else g += '<line x1="' + cx + '" y1="' + (oy + mH - r.down * S) + '" x2="' + cx + '" y2="' + (oy + mH + 4) + '" stroke="' + RED + '"/>' + T(cx, oy + mH + 17, 'Bottom ' + fx(r.down), {b:1});
+  // sides
+  const sideLab = (w, left) => (Math.abs(r.left - r.right) < 1e-9 ? 'Side ' : (left ? 'Left ' : 'Right ')) + fx(w);
+  if (r.left * S >= 16) g += T(ox + r.left * S / 2 + 4, cy, sideLab(r.left, true), {b:1, rot:1});
+  else g += T(ox - 8, cy + 4, sideLab(r.left, true), {b:1, a:'end'});
+  if (r.right * S >= 16) g += T(ox + mW - r.right * S / 2 + 4, cy, sideLab(r.right, false), {b:1, rot:1});
+  else g += T(ox + mW + 8, cy + 4, sideLab(r.right, false), {b:1, a:'start'});
+  return '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Mat layout with border widths">' + g + '</svg>';
+}
+
+function renderCut(r){
+  const el = $('cutBody');
+  const have = [r.odH, r.odW, r.vaH, r.vaW, r.up, r.down, r.left, r.right].every(ok);
+  const d4 = x => x.toFixed(4);
+  if (r.mount === 'flush'){ el.innerHTML = '<p class="hint">Flush mount: there is no mat to cut.</p>'; return; }
+  if (!have){ el.innerHTML = '<p class="hint">Enter the art size and the reveals to fill in this sheet.</p>'; return; }
+  const when = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  const title = $('title').value.trim(), artist = $('artist').value.trim();
+  const top = '<div class="cut-top"><span>' + esc(title || 'Untitled') + (artist ? ' \u2014 ' + esc(artist) : '') + '</span><span>' + when + ' \u00b7 Mats to cut: 1</span></div>';
+  if (r.mount === 'float'){
+    el.innerHTML = top + '<p>Float mount: no window is cut. Cut the backer to <b>' + d4(r.odW) + ' wide \u00d7 ' + d4(r.odH) + ' high</b> (' + fx(r.odW) + ' \u00d7 ' + fx(r.odH) + ').</p>';
+    return;
+  }
+  const row = (lab, val, f, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + lab + '</td><td class="n">' + val + '</td><td class="fr">' + (f || '') + '</td></tr>';
+  const sidesEq = Math.abs(r.left - r.right) < 1e-9;
+  const sideRow = sidesEq
+    ? row('Borders \u00b7 Side', d4(r.left), fx(r.left))
+    : row('Borders \u00b7 Side', 'L ' + d4(r.left) + '<br>R ' + d4(r.right), 'L ' + fx(r.left) + '<br>R ' + fx(r.right), 'bad');
+  const sumH = r.up + r.vaH + r.down, sumW = r.left + r.vaW + r.right;
+  const okH = Math.abs(sumH - r.odH) < 1e-6, okW = Math.abs(sumW - r.odW) < 1e-6;
+  const lip = fx(r.lip);
+  const tb = r.down > r.up + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.down) + ') should be at the bottom.'
+    : r.up > r.down + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.up) + ') should be at the top.'
+    : 'The top and bottom borders are equal.';
+  el.innerHTML = top + '<div class="cut-grid"><div>' +
+    '<table class="cut-tbl"><tr><th>Field on screen</th><th>Type</th><th>Same, in fractions</th></tr>' +
+    row('Opening Size \u00b7 Width', d4(r.vaW), fx(r.vaW)) +
+    row('Opening Size \u00b7 Height', d4(r.vaH), fx(r.vaH)) +
+    row('Borders \u00b7 Top', d4(r.up), fx(r.up)) +
+    row('Borders \u00b7 Bottom', d4(r.down), fx(r.down)) +
+    sideRow +
+    row('Outside Size \u00b7 Width <small>(fills in; must match)</small>', d4(r.odW), fx(r.odW), 'calc') +
+    row('Outside Size \u00b7 Height <small>(fills in; must match)</small>', d4(r.odH), fx(r.odH), 'calc') +
+    row('Layers', '1', '') + row('Template', 'Rectangle', '') +
+    '</table>' +
+    (sidesEq ? '' : '<p class="cut-warn"><b>Left and right borders differ.</b> The Single tab has one Side field for both. Do not enter one side value and cut. Ask the store how to cut an off-center window.</p>') +
+    '<p class="cut-foot">All sizes are inches. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
+    '</div><div>' + cutDiagram(r) +
+    '<p class="cut-foot">Arithmetic: top + opening + bottom = ' + d4(sumH) + (okH ? ' \u2713' : ' \u2717') + ' and side + opening + side = ' + d4(sumW) + (okW ? ' \u2713' : ' \u2717') + '. The frame lip covers ' + lip + ' of every border, already allowed for here. Do not trim to compensate.</p>' +
+    '</div></div>' +
+    '<div class="cut-grid"><div><div class="cut-h">Setting up</div><ol class="cut-steps">' +
+    '<li>Main Screen, <b>Edit New Mat</b>, <b>Single</b> tab.</li>' +
+    '<li>Type the Opening Size, Borders and Layers from the table. Your screen may list the fields in a different order. Tab out of the last Borders field. Do not press Enter.</li>' +
+    '<li>Outside Size fills itself in. It must read <b>' + fx(r.odW) + ' \u00d7 ' + fx(r.odH) + '</b>. If not, a number was mistyped: clear it and retype. Never type into Outside Size, because it rewrites the borders.</li>' +
+    '<li>Click <b>Cut</b> to open the Cut Preview. ' + tb + (sidesEq ? ' The window should sit centered left to right.' : '') + ' The indicator should say a back cut, which is the usual setting.</li>' +
+    '</ol></div><div><div class="cut-h">Loading and cutting</div><ol class="cut-steps" start="5">' +
+    '<li>At least 2 layers of scrap matboard under the mat.</li>' +
+    '<li>Mat face down, seated snugly against the Horizontal Clamp and the Vertical Clamp.</li>' +
+    '<li>Click <b>Cut</b> and answer the prompts for the blade cartridge and blade depth as usual.</li>' +
+    '<li>Before the next mat, measure this one against the table: opening ' + fx(r.vaW) + ' \u00d7 ' + fx(r.vaH) + ', top ' + fx(r.up) + ', bottom ' + fx(r.down) + ', sides ' + (sidesEq ? fx(r.left) : fx(r.left) + ' and ' + fx(r.right)) + '. Each should be within 1/32 in. If one is off, stop and tell the store.</li>' +
+    '</ol></div></div>' +
+    '<p class="cut-foot">Common slips: width and height swapped; ' + (Math.abs(r.up - r.down) > 1e-9 ? 'top and bottom swapped; ' : '') + 'typing into Outside Size. Field names follow the Wizard CMC software\u2019s Edit New Mat screen. Your machine or software version may label them a little differently, so match by meaning: Borders are the mat widths from the outside edge to the window.</p>';
+}
+
 /* ---------- summary ---------- */
 function summary(r){
   const p = +$('prec').value;
@@ -951,6 +1066,7 @@ function render(){
   drawProfile(last);
   drawFront(last);
   renderSpecs(last);
+  renderCut(last);
 }
 document.querySelectorAll('input[type=text], select').forEach(el => el.addEventListener('input', render));
 document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(el => el.addEventListener('change', render));
@@ -984,6 +1100,13 @@ $('sizePreset').addEventListener('change', () => {
 $('swapBtn').onclick = () => { const t = $('conH').value; $('conH').value = $('conW').value; $('conW').value = t; render(); };
 
 $('printBtn').onclick = () => window.print();
+$('printCutBtn').onclick = () => {
+  document.body.classList.add('printcut');
+  const done = () => document.body.classList.remove('printcut');
+  window.addEventListener('afterprint', done, {once:true});
+  window.print();
+  setTimeout(done, 1500);
+};
 $('copyBtn').onclick = async () => {
   const t = summary(last);
   try { await navigator.clipboard.writeText(t); $('copyBtn').textContent = 'Copied'; }
