@@ -223,7 +223,7 @@
     <label class="tick"><input type="checkbox" id="recMat"> Recommend mat reveals from the ratio</label>
     <label class="tick"><input type="checkbox" id="recFace"> Recommend frame face width from the ratio</label>
     <label class="tick"><input type="checkbox" id="recDepth"> Recommend moulding depth from the ratio</label>
-    <p class="hint">Ticked fields fill themselves and lock. Everything snaps to 1/32 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
+    <p class="hint">Ticked fields fill themselves and lock. Everything snaps to 1/16 in. Reveal recommendations apply when the size is not locked; a locked size works out the reveals itself.</p>
   </section>
 
   <section class="card">
@@ -252,15 +252,13 @@
       <label class="f">Clearance (ID = OD + )
         <select id="clr">
           <option value="0.0625">1/16 in.</option>
-          <option value="0.09375">3/32 in.</option>
           <option value="0.125">1/8 in.</option>
         </select></label>
       <label class="f">Lip overlap<input type="text" id="lip" inputmode="decimal" value="0.25"></label>
       <label class="f">Round to
         <select id="prec">
           <option value="8">1/8</option>
-          <option value="16">1/16</option>
-          <option value="32" selected>1/32</option>
+          <option value="16" selected>1/16</option>
         </select></label>
     </div>
 
@@ -417,8 +415,9 @@ const RATIO = {
   tatami: {v:2, sym:'2'}
 };
 const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
-const snap32 = x => Math.max(1/32, Math.round(x * 32) / 32);
-const toStr = x => frac(x, 32).replace('"', '');
+const GRID = 16;   // smallest increment: 1/16 in.
+const snapG = x => Math.max(1/GRID, Math.round(x * GRID) / GRID);
+const toStr = x => frac(x, GRID).replace('"', '');
 const stepK = (target, R) => Math.max(1, Math.round(-Math.log(target) / Math.log(R)));
 let recNotes = [];
 let cons = null;
@@ -448,14 +447,14 @@ function applyRecs(){
       const vis = style === 'three'
         ? {up: S, side: S, down: S * Math.sqrt(R)}
         : {up: S / f, side: S, down: S * f};
-      const rev = {up: snap32(vis.up + lip), side: snap32(vis.side + lip), down: snap32(vis.down + lip)};
+      const rev = {up: snapG(vis.up + lip), side: snapG(vis.side + lip), down: snapG(vis.down + lip)};
       $('revUp').value = toStr(rev.up); $('revDown').value = toStr(rev.down);
       $('revLeft').value = toStr(rev.side); $('revRight').value = toStr(rev.side);
       $('revAll').value = '';
-      const shown = x => frac(snap32(x), 32);
+      const shown = x => frac(snapG(x), GRID);
       recNotes.push('Recommended reveal: top ' + toStr(rev.up) + ', sides ' + toStr(rev.side) + ', bottom ' + toStr(rev.down) +
         ' in. Visible mat is ' + shown(vis.up) + ' / ' + shown(vis.side) + ' / ' + shown(vis.down) +
-        ' after the ' + frac(lip, 32) + ' lip. Side module = short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
+        ' after the ' + frac(lip, GRID) + ' lip. Side module = short side ' + frac(s, GRID) + ' ÷ ' + sys.sym + sup(k) +
         (style === 'equal' ? '. Centered, all sides equal.' : style === 'three' ? '. Top and sides are equal, bottom is ' + Math.sqrt(R).toFixed(2) + ' times the sides.' : '. Sides sit at the geometric mean of top and bottom, so top:bottom = 1:' + (style === 'strong' ? 'R²' : 'R') + '.'));
     }
   }
@@ -473,11 +472,11 @@ function applyRecs(){
       }
       const s = Math.min(odH, odW);
       const k = stepK(0.08, R);
-      let face = snap32(s / Math.pow(R, k));
-      const floor = snap32(lip + 0.125);
+      let face = snapG(s / Math.pow(R, k));
+      const floor = snapG(lip + 0.125);
       if (face < floor) face = floor;
       $('face').value = toStr(face);
-      recNotes.push('Recommended face width ' + toStr(face) + ' in. = OD short side ' + frac(s, 32) + ' ÷ ' + sys.sym + sup(k) +
+      recNotes.push('Recommended face width ' + toStr(face) + ' in. = OD short side ' + frac(s, GRID) + ' ÷ ' + sys.sym + sup(k) +
         ' (' + Math.round(face / s * 100) + '% of the short side).');
     }
   }
@@ -492,7 +491,7 @@ const PLACE = {
   line:   'window centered on the ratio line, 1 − 1/R of the height down from the top',
   manual: 'top and left as entered, bottom and right take the rest'
 };
-const fmtIn = x => Math.abs(x * 32 - Math.round(x * 32)) < 1e-9 ? toStr(x) : dec(x);
+const fmtIn = x => Math.abs(x * GRID - Math.round(x * GRID)) < 1e-9 ? toStr(x) : dec(x);
 const PRESETS = [[4,6],[5,7],[8,10],[8.5,11],[9,12],[11,14],[12,12],[12,16],[14,18],[16,20],[18,24],[20,24],[22,28],[24,30],[24,36]];
 
 function applyConstraints(){
@@ -513,7 +512,7 @@ function applyConstraints(){
   let vaH, vaW, srcNote;
   if (src === 'ratio'){
     const k = stepK(parseFloat($('matWeight').value), R);
-    const m = snap32(Math.min(odH, odW) / Math.pow(R, k));
+    const m = snapG(Math.min(odH, odW) / Math.pow(R, k));
     vaH = odH - 2 * m; vaW = odW - 2 * m;
     srcNote = 'mat weight (OD short side ÷ R^' + k + ' = ' + fr(m) + ' per side)';
   } else if (!ok(artH) || !ok(artW)){
@@ -532,7 +531,7 @@ function applyConstraints(){
   if (!(vaH > 0) || !(vaW > 0) || !(mh > 1e-9) || !(mw > 1e-9)){ cons = Object.assign(base, {error:true}); return; }
 
   const style = $('matStyle').value;
-  const split = (total, f) => { const a = Math.min(total, Math.max(0, Math.round(total * f * 32) / 32)); return [a, total - a]; };
+  const split = (total, f) => { const a = Math.min(total, Math.max(0, Math.round(total * f * GRID) / GRID)); return [a, total - a]; };
   const warns = [];
   let up, down, left, right;
   [left, right] = split(mw, 0.5);
@@ -559,8 +558,8 @@ function applyConstraints(){
 
   if (style === 'three' && down < up - 1e-9) warns.push('The bottom is lighter than the top. Use a taller glass or a smaller window if the bottom should be heavier.');
   if (style !== 'manual'){
-    if (Math.abs(left - right) > 1e-9) warns.push('Left and right differ by ' + fr(Math.abs(left - right)) + ' because the margin does not split evenly on the 1/32 in. grid.');
-    if (style === 'equal' && Math.abs(up - down) > 1e-9) warns.push('Top and bottom differ by ' + fr(Math.abs(up - down)) + ' because the margin does not split evenly on the 1/32 in. grid.');
+    if (Math.abs(left - right) > 1e-9) warns.push('Left and right differ by ' + fr(Math.abs(left - right)) + ' because the margin does not split evenly on the 1/16 in. grid.');
+    if (style === 'equal' && Math.abs(up - down) > 1e-9) warns.push('Top and bottom differ by ' + fr(Math.abs(up - down)) + ' because the margin does not split evenly on the 1/16 in. grid.');
   }
   const notes = [
     'Locked ' + fr(odH) + ' H × ' + fr(odW) + ' W' + (basis === 'id' ? ' (frame ID ' + fr(cH) + ' × ' + fr(cW) + ' less ' + fr(clr) + ' clearance)' : '') +
@@ -632,15 +631,15 @@ function read(){
   r.lipT = ok(g.lipT) && g.lipT > 0 ? g.lipT : 0.1875;
   if ($('recDepth').checked){
     const Rr = RATIO[$('ratioSys').value].v, p = +$('prec').value;
-    const need = Math.ceil((r.minDepth + 1/16) * 32 - 1e-9) / 32;
+    const need = Math.ceil((r.minDepth + 1/16) * GRID - 1e-9) / GRID;
     const targetDepth = r.face / Rr;
-    const target = Math.round((targetDepth - r.lipT) * 32) / 32;
+    const target = Math.round((targetDepth - r.lipT) * GRID) / GRID;
     const rab = Math.max(need, target);
     $('rabbet').value = fmtIn(rab); r.rabbet = rab;
-    recNotes.push('Recommended rabbet ' + frac(rab, 32) + ', moulding depth ' + frac(r.lipT + rab, 32) + ' (lip ' + frac(r.lipT, 32) + ' + rabbet). ' +
+    recNotes.push('Recommended rabbet ' + frac(rab, GRID) + ', moulding depth ' + frac(r.lipT + rab, GRID) + ' (lip ' + frac(r.lipT, GRID) + ' + rabbet). ' +
       (target >= need - 1e-9
-        ? 'Ratio governs: face ' + frac(r.face, 32) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ' = ' + frac(targetDepth, 32) + ' of moulding depth.'
-        : 'The stack governs: the required ' + frac(Math.ceil(r.minDepth * 32 - 1e-9) / 32, 32) + ' plus 1/16 spare needs a ' + frac(need, 32) + ' rabbet, which makes the moulding ' + frac(r.lipT + need, 32) + ' deep, past the ratio target of ' + frac(targetDepth, 32) + ' (face ' + frac(r.face, 32) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ').'));
+        ? 'Ratio governs: face ' + frac(r.face, GRID) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ' = ' + frac(targetDepth, GRID) + ' of moulding depth.'
+        : 'The stack governs: the required ' + frac(Math.ceil(r.minDepth * GRID - 1e-9) / GRID, GRID) + ' plus 1/16 spare needs a ' + frac(need, GRID) + ' rabbet, which makes the moulding ' + frac(r.lipT + need, GRID) + ' deep, past the ratio target of ' + frac(targetDepth, GRID) + ' (face ' + frac(r.face, GRID) + ' \u00f7 ' + RATIO[$('ratioSys').value].sym + ').'));
   }
   return r;
 }
@@ -969,6 +968,9 @@ function renderCut(r){
   const sumH = r.up + r.vaH + r.down, sumW = r.left + r.vaW + r.right;
   const okH = Math.abs(sumH - r.odH) < 1e-6, okW = Math.abs(sumW - r.odW) < 1e-6;
   const lip = fx(r.lip);
+  const onGrid = x => Math.abs(x * GRID - Math.round(x * GRID)) < 1e-9;
+  const off = [['opening width', r.vaW], ['opening height', r.vaH], ['top', r.up], ['bottom', r.down], ['left', r.left], ['right', r.right], ['outside width', r.odW], ['outside height', r.odH]]
+    .filter(q => !onGrid(q[1])).map(q => q[0]);
   const tb = r.down > r.up + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.down) + ') should be at the bottom.'
     : r.up > r.down + 1e-9 ? 'The wider of the top and bottom borders (' + fx(r.up) + ') should be at the top.'
     : 'The top and bottom borders are equal.';
@@ -984,7 +986,8 @@ function renderCut(r){
     row('Layers', '1', '') + row('Template', 'Rectangle', '') +
     '</table>' +
     (sidesEq ? '' : '<p class="cut-warn"><b>Left and right borders differ.</b> The Single tab has one Side field for both. Do not enter one side value and cut. Ask the store how to cut an off-center window.</p>') +
-    '<p class="cut-foot">All sizes are inches. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
+    (off.length ? '<p class="cut-warn"><b>Not on the 1/16 in. grid:</b> ' + off.join(', ') + '. The decimals for these are rounded, so they may not cut exactly. Adjust the art size or the window to a 1/16 in. increment.</p>' : '') +
+    '<p class="cut-foot">All sizes are inches' + (off.length ? '' : ', and every decimal is exact because each value is a multiple of 1/16') + '. Width is left to right as the piece hangs. Height is top to bottom. Top is the edge that hangs up.</p>' +
     '</div><div>' + cutDiagram(r) +
     '<p class="cut-foot">Arithmetic: top + opening + bottom = ' + d4(sumH) + (okH ? ' \u2713' : ' \u2717') + ' and side + opening + side = ' + d4(sumW) + (okW ? ' \u2713' : ' \u2717') + '. The frame lip covers ' + lip + ' of every border, already allowed for here. Do not trim to compensate.</p>' +
     '</div></div>' +
@@ -1117,7 +1120,7 @@ $('resetBtn').onclick = () => {
   document.querySelectorAll('input[type=text]').forEach(el => el.value = '');
   $('lip').value = 0.25; $('matT').value = 0.0625; $('backT').value = 0.1875; $('face').value = 1.25; $('lipT').value = 0.1875;
   $('m1').checked = $('g1').checked = $('s1').checked = $('t1').checked = true;
-  $('clr').value = '0.0625'; $('prec').value = '32'; $('glazeT').value = GLAZE.plexi;
+  $('clr').value = '0.0625'; $('prec').value = '16'; $('glazeT').value = GLAZE.plexi;
   $('recMat').checked = $('recFace').checked = $('recDepth').checked = $('lockOD').checked = false;
   $('overlap').value = 0.25; $('sizeBasis').value = 'od'; $('winSrc').value = 'art';
   $('ratioSys').value = 'golden'; $('matWeight').value = '0.24'; $('matStyle').value = 'raised';
